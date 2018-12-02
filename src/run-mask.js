@@ -91,7 +91,7 @@ module.exports = (params = {}) => {
   
       if (maskElement.cursor.value instanceof Function) {
         const cursorValueResult = maskElement.cursor.value(...result.cursor.args);
-  
+
         if (typeof cursorValueResult === 'number') {
           result.cursor = cursorValueResult;
         } else {

@@ -22,7 +22,7 @@ module.exports = {
       { match: /(\d)/, replace: '$1', cursor: { position: [12, 12], value: 12 } },
       { match: /(\d)/, replace: '-$1', cursor: { position: [13, 14], value: 14 } },
       { match: /(\d)/, replace: '$1', cursor: { position: [15, 15], value: 15 } },
-      { match: /(\d)/, replace: '-$1', cursor: { position: [16, 19], value: 19 } },
+      { match: /(\d)/, replace: '-$1', cursor: { position: [16, 17], value: 17 } },
       { match: /(\d)/, replace: '$1', cursor: { position: [18, 18], value: 18 } },
     ],
     others: [
