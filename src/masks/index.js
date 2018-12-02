@@ -1,7 +1,7 @@
 module.exports = {
   phones: {
     ru: [
-      { match: /^7/, replace: '7', cursor: { position: [0, 1], value: 1 } },
+      { match: /^7/, replace: '7', cursor: { position: [1, 1], value: 1 } },
       { match: /(\d)/, replace: ' ($1', cursor: { position: [2, 4], value: 4 } },
       { match: /(\d)/, replace: '$1', cursor: { position: [5, 5], value: 5 } },
       { match: /(\d)/, replace: '$1', cursor: { position: [6, 6], value: 6 } },
@@ -14,7 +14,7 @@ module.exports = {
       { match: /(\d)/, replace: '$1', cursor: { position: [17, 17], value: 17 } },
     ],
     kz: [
-      { match: /^375/, replace: '375', cursor: { position: [0, 3], value: 3 } },
+      { match: /^375/, replace: '375', cursor: { position: [1, 3], value: 3 } },
       { match: /(\d)/, replace: ' ($1', cursor: { position: [4, 6], value: 6 } },
       { match: /(\d)/, replace: '$1', cursor: { position: [7, 7], value: 7 } },
       { match: /(\d)/, replace: ') $1', cursor: { position: [8, 10], value: 10 } },

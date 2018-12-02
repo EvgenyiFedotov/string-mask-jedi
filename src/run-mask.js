@@ -48,8 +48,6 @@ module.exports = (params = {}) => {
     value,
     mask,
     cursor,
-    preprocess,
-    postprocess,
   } = params;
   const result = {
     valueParams: value,
@@ -70,10 +68,6 @@ module.exports = (params = {}) => {
     throw new Error('Params `mask` in run-mask is not type `array`');
   }
 
-  if (preprocess) {
-    result.valueParams = preprocess(result.valueParams);
-  }
-
   for (let index = 0; index < mask.length; index++) {
     const resultElement = runMaskElement({
       element: mask[index],
@@ -84,10 +78,6 @@ module.exports = (params = {}) => {
     if (!resultElement) {
       break;
     }
-  }
-
-  if (result.value && postprocess) {
-    result.value = postprocess(result.value);
   }
 
   if (!result.value || result.value === value) {

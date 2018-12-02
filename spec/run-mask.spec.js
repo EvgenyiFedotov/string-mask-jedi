@@ -1,5 +1,5 @@
-const runMask = require('./run-mask');
-const masks = require('./masks');
+const runMask = require('../src/run-mask');
+const masks = require('../src/masks');
 
 test('phone `ru` mask', () => {
   const result = runMask({
@@ -34,13 +34,11 @@ test('phone `others` mask and cursor value is Function', () => {
   expect(result).toEqual({ value: '370 3', cursor: 5, maskApplied: true });
 });
 
-test('`preprocess` and `postprocess`', () => {
+test('return default `value`', () => {
   const result = runMask({
     mask: masks.phones.others,
     value: '+370 312311231237777',
     cursor: 2,
-    preprocess: value => value.replace(/[+ ()-\D]/g, '').replace(/(\d{18})(.*)/g, '$1'),
-    postprocess: value => `+${value}`,
   });
 
   expect(typeof result).toBe('object');
