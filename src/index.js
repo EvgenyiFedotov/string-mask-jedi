@@ -1,12 +1,14 @@
 module.exports = (masks = [], params = {}) => {
-  const { pre, post } = params;
+  const { pre, post, full } = params;
 
   return (value, cursor) => {
-    const valuePre = pre && pre(value);
-    let valueCurrent = valuePre;
+    let maskCursor = cursor || value.length;
+    const preResult = pre && pre(value, maskCursor);
+    let valueCurrent = preResult ? (preResult.value || value) : value;
     let valueResult = '';
     let maskApplied = false;
-    let maskCursor = cursor || value.length;
+
+    maskCursor = preResult ? (preResult.cursor || maskCursor) : maskCursor;
 
     for (let maskIndex = 0; maskIndex < masks.length; maskIndex++) {
       const mask = masks[maskIndex];
@@ -59,19 +61,37 @@ module.exports = (masks = [], params = {}) => {
       }
     }
 
-    valueResult = post && post(valueResult);
+    const postResult = post && post(valueResult, maskCursor, {
+      value,
+      cursor,
+    });
 
-    if (value === valueResult) {
-      maskApplied = true;
+    if (postResult) {
+      valueResult = postResult.value || valueResult;
+      maskCursor = postResult.cursor || maskCursor;
     }
 
-    return {
-      valuePre,
-      value,
-      valueResult,
-      maskApplied,
-      maskCursor,
-    };
+    if (valueResult && valueResult !== value) {
+      maskApplied = true;
+    } else {
+      valueResult = value,
+      maskCursor = cursor;
+    }
+
+    return full === true
+      ? {
+        preResult,
+        value,
+        postResult,
+        valueResult,
+        maskApplied,
+        maskCursor,
+      }
+      : {
+        value: valueResult,
+        cursor: maskCursor,
+        maskApplied,
+      };
   };
 };
 
