@@ -1,99 +1,156 @@
-module.exports = (masks = [], params = {}) => {
-  const { pre, post, full } = params;
+/**
+ * @param {Array} submask
+ * @param {Object} [params]
+ * @param {Function} [params.preproc]
+ * @param {Boolean} [params.full]
+ */
+module.exports = function createMask(submasks, params) {
+  params = params instanceof Object ? params : {};
 
-  return (value, cursor) => {
-    let maskCursor = cursor || value.length;
-    const preResult = pre && pre(value, maskCursor);
-    let valueCurrent = preResult ? (preResult.value || value) : value;
-    let valueResult = '';
-    let maskApplied = false;
+  var preproc = params.preproc;
+  var full = params.full;
 
-    maskCursor = preResult ? (preResult.cursor || maskCursor) : maskCursor;
+  if (!(submasks) instanceof Array) {
+    throw new Error('First params createMask is not Array');
+  }
 
-    for (let maskIndex = 0; maskIndex < masks.length; maskIndex++) {
-      const mask = masks[maskIndex];
-      let isSetupCursor = false;
+  if (preproc && !(preproc instanceof Function)) {
+    throw new Error('Second params createMask is not Function');
+  }
 
-      for (let maskElementIndex = 0; maskElementIndex < mask.length; maskElementIndex++) {
-        const maskElement = mask[maskElementIndex];
-        const matchResult = valueCurrent.match(maskElement.match);
+  /**
+   * @param {Stromg} value
+   * @param {Number} cursor
+   */
+  function Mask(value, cursor) {
+    var valuePreproc = preproc && preproc(value, cursor);
+    var valueCurrent = valuePreproc
+      ? (valuePreproc.value || value)
+      : value;
+    var valueResult = '';
+    var applied = false;
+    var cursorResult = valuePreproc
+      ? (valuePreproc.cursor || cursor || value.length)
+      : (cursor || value.length);
 
-        if (matchResult) {
-          const valueMask = matchResult[0].replace(
-            maskElement.match,
-            maskElement.replace,
-          );
+    for (var submasksIndex = 0; submasksIndex < submasks.length; submasksIndex++) {
+      var submaskResult = procSubmask({
+        submask: submasks[submasksIndex],
+        valueCurrent: valueCurrent,
+        valueResult: valueResult,
+        cursor: cursor,
+        cursorResult: cursorResult
+      });
 
-          valueResult = `${valueResult}${valueMask}`;
-          valueCurrent = valueCurrent.replace(maskElement.match, '');
-
-          if (maskElement.cursor && !isSetupCursor) {
-            const isCursor = maskElement.cursor.position
-              && maskElement.cursor.position[0] <= maskCursor
-              && maskCursor <= maskElement.cursor.position[1];
-            const isFunction = maskElement.cursor.value instanceof Function;
-
-            if (isCursor || isFunction) {
-              if (typeof maskElement.cursor.value === 'number') {
-                maskCursor = maskElement.cursor.value;
-                isSetupCursor = true;
-              } else if (isFunction) {
-                const cursorValueResult = maskElement.cursor.value(
-                  valueMask,
-                  maskCursor,
-                  matchResult,
-                );
-
-                if (typeof cursorValueResult === 'number') {
-                  maskCursor = cursorValueResult;
-                  isSetupCursor = true;
-                }
-              }
-            }
-          }
-        } else {
-          break;
-        }
-      }
+      valueCurrent = submaskResult.valueCurrent;
+      valueResult = submaskResult.valueResult;
+      cursorResult = submaskResult.cursorResult;
 
       if (valueResult) {
         break;
       }
     }
 
-    const postResult = post && post(valueResult, maskCursor, {
-      value,
-      cursor,
-    });
-
-    if (postResult) {
-      valueResult = postResult.value || valueResult;
-      maskCursor = postResult.cursor || maskCursor;
-    }
-
     if (valueResult && valueResult !== value) {
-      maskApplied = true;
+      applied = true;
+    } else if (!valueResult && valuePreproc) {
+      valueResult = valuePreproc.value || value;
+      cursorResult = valuePreproc.cursor || cursor;
     } else {
       valueResult = value,
-      maskCursor = cursor;
+      cursorResult = cursor;
     }
 
     return full === true
       ? {
-        preResult,
-        value,
-        postResult,
-        valueResult,
-        maskApplied,
-        maskCursor,
+        value: value,
+        cursor: cursor,
+        valuePreproc: valuePreproc,
+        valueResult: valueResult,
+        cursorResult: cursorResult,
+        applied: applied
       }
       : {
         value: valueResult,
-        cursor: maskCursor,
-        maskApplied,
+        cursor: cursorResult,
+        applied: applied
       };
-  };
+  }
+
+  return Mask;
 };
 
-module.exports.masks = require('./masks');
-module.exports.masksArr = masks => Object.keys(masks).map(key => masks[key]);
+/**
+ * @param {Object} submask
+ */
+module.exports.submasksArr = function masksArr(submasks) {
+  return Object.keys(submasks).map(function (key) {
+    return submasks[key];
+  });
+};
+
+/**
+ * @param {Object} params
+ * @param {Object[]} params.submask
+ * @param {String} params.valueCurrent
+ * @param {String} params.valueResult
+ * @param {Number} params.cursor
+ * @param {Number} params.cursorResult
+ */
+function procSubmask(params) {
+  var submask = params.submask;
+  var valueCurrent = params.valueCurrent;
+  var valueResult = params.valueResult;
+  var cursor = params.cursor;
+  var cursorResult = params.cursorResult;
+  var setupCursor = false;
+
+  for (var index = 0; index < submask.length; index++) {
+    var submaskElement = submask[index];
+    var matchResult = valueCurrent.match(submaskElement.match);
+
+    if (matchResult) {
+      var valueReplace = matchResult[0].replace(
+        submaskElement.match,
+        submaskElement.replace,
+      );
+      var smElCursor = submaskElement.cursor;
+
+      valueResult = `${valueResult}${valueReplace}`;
+      valueCurrent = valueCurrent.replace(submaskElement.match, '');
+
+      if (smElCursor && !setupCursor) {
+        const isCursor = smElCursor.position
+          && smElCursor.position[0] <= cursor
+          && cursor <= smElCursor.position[1];
+        const isFunction = smElCursor.value instanceof Function;
+
+        if (isCursor || isFunction) {
+          if (typeof smElCursor.value === 'number') {
+            setupCursor = true;
+            cursorResult = smElCursor.value;
+          } else if (isFunction) {
+            var smElCursorValueResult = smElCursor.value(
+              valueReplace,
+              cursor,
+              matchResult
+            );
+
+            if (typeof smElCursorValueResult === 'number') {
+              setupCursor = true;
+              cursorResult = smElCursorValueResult;
+            }
+          }
+        }
+      }
+    } else {
+      break;
+    }
+  }
+
+  return {
+    valueCurrent: valueCurrent,
+    valueResult: valueResult,
+    cursorResult: cursorResult
+  };
+}
