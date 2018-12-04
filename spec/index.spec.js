@@ -2,7 +2,7 @@ const createMask = require('../src');
 const masks = require('../src/submasks-phones');
 
 test('default', () => {
-  const mask = createMask(createMask.submasksArr(masks));
+  const mask = createMask(createMask.submasksArray(masks));
 
   expect(mask('78zzz12312312312312', 2))
     .toEqual({ value: '+7 (812) 312-31-23', cursor: 2, applied: true });
@@ -22,7 +22,7 @@ test('default', () => {
 
 test('params `full` = true', () => {
   const mask = createMask(
-    createMask.submasksArr(masks),
+    createMask.submasksArray(masks),
     {
       full: true
     }
@@ -79,7 +79,7 @@ test('params `full` = true', () => {
 
 test('params `preproc`', () => {
   const mask = createMask(
-    createMask.submasksArr(masks),
+    createMask.submasksArray(masks),
     {
       preproc: function (value) {
         return {

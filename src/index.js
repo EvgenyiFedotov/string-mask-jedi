@@ -1,16 +1,18 @@
+'use strict';
+
 /**
  * @param {Array} submask
  * @param {Object} [params]
  * @param {Function} [params.preproc]
  * @param {Boolean} [params.full]
  */
-module.exports = function createMask(submasks, params) {
+function createMask(submasks, params) {
   params = params instanceof Object ? params : {};
 
   var preproc = params.preproc;
   var full = params.full;
 
-  if (!(submasks) instanceof Array) {
+  if (!(submasks instanceof Array)) {
     throw new Error('First params createMask is not Array');
   }
 
@@ -81,15 +83,6 @@ module.exports = function createMask(submasks, params) {
 };
 
 /**
- * @param {Object} submask
- */
-module.exports.submasksArr = function masksArr(submasks) {
-  return Object.keys(submasks).map(function (key) {
-    return submasks[key];
-  });
-};
-
-/**
  * @param {Object} params
  * @param {Object[]} params.submask
  * @param {String} params.valueCurrent
@@ -112,7 +105,7 @@ function procSubmask(params) {
     if (matchResult) {
       var valueReplace = matchResult[0].replace(
         submaskElement.match,
-        submaskElement.replace,
+        submaskElement.replace
       );
       var smElCursor = submaskElement.cursor;
 
@@ -120,10 +113,10 @@ function procSubmask(params) {
       valueCurrent = valueCurrent.replace(submaskElement.match, '');
 
       if (smElCursor && !setupCursor) {
-        const isCursor = smElCursor.position
+        var isCursor = smElCursor.position
           && smElCursor.position[0] <= cursor
           && cursor <= smElCursor.position[1];
-        const isFunction = smElCursor.value instanceof Function;
+        var isFunction = smElCursor.value instanceof Function;
 
         if (isCursor || isFunction) {
           if (typeof smElCursor.value === 'number') {
@@ -154,3 +147,11 @@ function procSubmask(params) {
     cursorResult: cursorResult
   };
 }
+
+createMask.submasksArray = function (submasks) {
+  return Object.keys(submasks).map(function (key) {
+    return submasks[key];
+  });
+};
+
+module.exports = createMask;
