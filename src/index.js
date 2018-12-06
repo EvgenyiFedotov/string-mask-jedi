@@ -27,7 +27,7 @@ function createMask(submasks, params) {
   function Mask(value, cursor) {
     var valuePreproc = preproc && preproc(value, cursor);
     var valueCurrent = valuePreproc
-      ? (valuePreproc.value || value)
+      ? (valuePreproc.value !== undefined ? valuePreproc.value : value)
       : value;
     var valueResult = '';
     var applied = false;
@@ -59,7 +59,7 @@ function createMask(submasks, params) {
       valueResult = valuePreproc.value || value;
       cursorResult = valuePreproc.cursor || cursor;
     } else {
-      valueResult = value,
+      valueResult = value;
       cursorResult = cursor;
     }
 
