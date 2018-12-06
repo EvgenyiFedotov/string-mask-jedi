@@ -136,6 +136,8 @@ function procSubmask(params) {
           }
         }
       }
+    } else if (submaskElement && submaskElement.space) {
+      valueResult = `${valueResult}${submaskElement.space}`;
     } else {
       break;
     }

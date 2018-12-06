@@ -94,3 +94,35 @@ test('params `preproc`', () => {
   expect(mask('12asd12123sasd', 4))
     .toEqual({"applied": true, "cursor": 4, "value": "+1212123"});
 });
+
+test('submask with space string', () => {
+  const submasks = [
+    [
+      { match: /^7/, replace: '+7' },
+      { match: /(\d)/, replace: ' ($1', space: ' (_' },
+      { match: /(\d)/, replace: '$1', space: '_' },
+      { match: /(\d)/, replace: '$1', space: '_' },
+      { match: /(\d)/, replace: ') $1', space: ') _' },
+      { match: /(\d)/, replace: '$1', space: '_' },
+      { match: /(\d)/, replace: '$1', space: '_' },
+      { match: /(\d)/, replace: '-$1', space: '-_' },
+      { match: /(\d)/, replace: '$1', space: '_' },
+      { match: /(\d)/, replace: '-$1', space: '-_' },
+      { match: /(\d)/, replace: '$1', space: '_' },
+    ],
+  ];
+
+  const mask = createMask(submasks);
+
+  expect(mask('7', 2))
+    .toEqual({ value: '+7 (___) ___-__-__', cursor: 2, applied: true });
+
+  expect(mask('765', 2))
+    .toEqual({ value: '+7 (65_) ___-__-__', cursor: 2, applied: true });
+
+  expect(mask('7658765', 2))
+    .toEqual({ value: '+7 (658) 765-__-__', cursor: 2, applied: true });
+
+  expect(mask('76587659', 2))
+    .toEqual({ value: '+7 (658) 765-9_-__', cursor: 2, applied: true });
+});

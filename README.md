@@ -73,7 +73,7 @@ const submasks = [
 
 const mask = createMask(submasks, { full: true });
 
-console.log(mask('7812312312312312', 2))
+console.log(mask('7812312312312312', 2));
 
 // {
 //  applied": true,
@@ -117,7 +117,7 @@ const mask = createMask(submasks, {
   },
 });
 
-console.log(mask('78zzz12312312312312', 2))
+console.log(mask('78zzz12312312312312', 2));
 
 // {
 //   "applied": true
@@ -127,4 +127,38 @@ console.log(mask('78zzz12312312312312', 2))
 //   "valuePreproc": { "value": "7812312312312312" },
 //   "valueResult": "+7 (812) 312-31-23",
 // }
+```
+
+##### submask with **space** string
+
+```javascript
+const submasks = [
+  [
+    { match: /^7/, replace: '+7' },
+    { match: /(\d)/, replace: ' ($1', space: ' (_' },
+    { match: /(\d)/, replace: '$1', space: '_' },
+    { match: /(\d)/, replace: '$1', space: '_' },
+    { match: /(\d)/, replace: ') $1', space: ') _' },
+    { match: /(\d)/, replace: '$1', space: '_' },
+    { match: /(\d)/, replace: '$1', space: '_' },
+    { match: /(\d)/, replace: '-$1', space: '-_' },
+    { match: /(\d)/, replace: '$1', space: '_' },
+    { match: /(\d)/, replace: '-$1', space: '-_' },
+    { match: /(\d)/, replace: '$1', space: '_' },
+  ],
+];
+
+const mask = createMask(submasks);
+
+console.log(mask('7', 2));
+// => { value: '+7 (___) ___-__-__', cursor: 2, applied: true }
+
+console.log(mask('765', 2));
+// => { value: '+7 (65_) ___-__-__', cursor: 2, applied: true }
+
+console.log(mask('7658765', 2));
+// => { value: '+7 (658) 765-__-__', cursor: 2, applied: true }
+
+console.log(mask('76587659', 2));
+// => { value: '+7 (658) 765-9_-__', cursor: 2, applied: true }
 ```
