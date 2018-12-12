@@ -162,3 +162,5 @@ createMask.submasksArray = function (submasks) {
     return submasks[key];
   });
 };
+
+module.exports = createMask;
