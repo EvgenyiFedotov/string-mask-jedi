@@ -27,9 +27,10 @@ function createMask(submasks, params) {
   function Mask(value, cursor) {
     var valuePreproc = preproc && preproc(value, cursor);
     var valueCurrent = valuePreproc
-      ? (valuePreproc.value || value)
+      ? (valuePreproc.value !== undefined ? valuePreproc.value : value)
       : value;
     var valueResult = '';
+    var valueResultReplace = '';
     var applied = false;
     var cursorResult = valuePreproc
       ? (valuePreproc.cursor || cursor || value.length)
@@ -40,13 +41,15 @@ function createMask(submasks, params) {
         submask: submasks[submasksIndex],
         valueCurrent: valueCurrent,
         valueResult: valueResult,
-        cursor: cursor,
-        cursorResult: cursorResult
+        valueResultReplace: valueResultReplace,
+        cursor: cursor === undefined ? cursorResult : cursor,
+        cursorResult: cursorResult,
       });
 
       valueCurrent = submaskResult.valueCurrent;
       valueResult = submaskResult.valueResult;
       cursorResult = submaskResult.cursorResult;
+      valueResultReplace = submaskResult.valueResultReplace;
 
       if (valueResult) {
         break;
@@ -59,7 +62,7 @@ function createMask(submasks, params) {
       valueResult = valuePreproc.value || value;
       cursorResult = valuePreproc.cursor || cursor;
     } else {
-      valueResult = value,
+      valueResult = value;
       cursorResult = cursor;
     }
 
@@ -69,6 +72,7 @@ function createMask(submasks, params) {
         cursor: cursor,
         valuePreproc: valuePreproc,
         valueResult: valueResult,
+        valueResultReplace: valueResultReplace,
         cursorResult: cursorResult,
         applied: applied
       }
@@ -94,6 +98,7 @@ function procSubmask(params) {
   var submask = params.submask;
   var valueCurrent = params.valueCurrent;
   var valueResult = params.valueResult;
+  var valueResultReplace = params.valueResult;
   var cursor = params.cursor;
   var cursorResult = params.cursorResult;
   var setupCursor = false;
@@ -102,14 +107,15 @@ function procSubmask(params) {
     var submaskElement = submask[index];
     var matchResult = valueCurrent.match(submaskElement.match);
 
-    if (matchResult) {
+    if (matchResult && submaskElement.replace) {
       var valueReplace = matchResult[0].replace(
         submaskElement.match,
         submaskElement.replace
       );
       var smElCursor = submaskElement.cursor;
 
-      valueResult = `${valueResult}${valueReplace}`;
+      valueResult = valueResult + valueReplace;
+      valueResultReplace = valueResultReplace + valueReplace;
       valueCurrent = valueCurrent.replace(submaskElement.match, '');
 
       if (smElCursor && !setupCursor) {
@@ -136,6 +142,8 @@ function procSubmask(params) {
           }
         }
       }
+    } else if (submaskElement.space) {
+      valueResult = valueResult + submaskElement.space;
     } else {
       break;
     }
@@ -144,7 +152,8 @@ function procSubmask(params) {
   return {
     valueCurrent: valueCurrent,
     valueResult: valueResult,
-    cursorResult: cursorResult
+    cursorResult: cursorResult,
+    valueResultReplace: valueResultReplace
   };
 }
 
@@ -153,5 +162,3 @@ createMask.submasksArray = function (submasks) {
     return submasks[key];
   });
 };
-
-module.exports = createMask;
