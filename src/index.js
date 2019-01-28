@@ -1,159 +1,89 @@
-'use strict';
-
 /**
- * @param {Array} submask
- * @param {Object} [params]
- * @param {Function} [params.preproc]
- * @param {Boolean} [params.full]
+ * @param {Object[]} mask
+ * @param {Object} [config]
+ * @param {Object} [config.defaultParams]
  */
-function createMask(submasks, params) {
-  params = params instanceof Object ? params : {};
-
-  var preproc = params.preproc;
-  var full = params.full;
-
-  if (!(submasks instanceof Array)) {
-    throw new Error('First params createMask is not Array');
-  }
-
-  if (preproc && !(preproc instanceof Function)) {
-    throw new Error('Second params createMask is not Function');
-  }
+function createMask(mask, config = {}) {
+  const {
+    defaultParams = { value: '', cursor: 0 },
+  } = config;
+  const prev = { resultMap: null, result: null };
 
   /**
-   * @param {Stromg} value
-   * @param {Number} cursor
+   * @param {Object} params
+   * @param {String} params.value
+   * @param {Number} params.cursor
    */
-  function Mask(value, cursor) {
-    var valuePreproc = preproc && preproc(value, cursor);
-    var valueCurrent = valuePreproc
-      ? (valuePreproc.value !== undefined ? valuePreproc.value : value)
-      : value;
-    var valueResult = '';
-    var applied = false;
-    var cursorResult = valuePreproc
-      ? (valuePreproc.cursor || cursor || value.length)
-      : (cursor || value.length);
+  const runMask = (params) => {
+    let {
+      value = '',
+      cursor = 0,
+    } = params;
 
-    for (var submasksIndex = 0; submasksIndex < submasks.length; submasksIndex++) {
-      var submaskResult = procSubmask({
-        submask: submasks[submasksIndex],
-        valueCurrent: valueCurrent,
-        valueResult: valueResult,
-        cursor: cursor,
-        cursorResult: cursorResult
-      });
+    // Проанализируем переданное значение с помощью маски
+    const resultMap = mask.reduce((result, getMaskElement, index) => {
+      const maskElement = getMaskElement(result, index);
+      const matchResult = value.match(maskElement.match);
+      const res = { value: '', cursor: 0, space: '' };
 
-      valueCurrent = submaskResult.valueCurrent;
-      valueResult = submaskResult.valueResult;
-      cursorResult = submaskResult.cursorResult;
+      if (matchResult) {
+        res.value = matchResult[0].replace(
+          maskElement.match,
+          maskElement.replace,
+        );
+        res.cursor = res.value.length;
 
-      if (valueResult) {
-        break;
+        value = value.replace(maskElement.match, '');
+      } else {
+        res.space = maskElement.space || '';
+
+        value = '';
       }
-    }
 
-    if (valueResult && valueResult !== value) {
-      applied = true;
-    } else if (!valueResult && valuePreproc) {
-      valueResult = valuePreproc.value || value;
-      cursorResult = valuePreproc.cursor || cursor;
-    } else {
-      valueResult = value;
-      cursorResult = cursor;
-    }
+      result.push(res);
 
-    return full === true
-      ? {
-        value: value,
-        cursor: cursor,
-        valuePreproc: valuePreproc,
-        valueResult: valueResult,
-        cursorResult: cursorResult,
-        applied: applied
-      }
-      : {
-        value: valueResult,
-        cursor: cursorResult,
-        applied: applied
-      };
-  }
+      return result;
+    }, []);
 
-  return Mask;
-};
+    // Получим текущий суммарный результат
+    const result = resultMap.reduce((result, maskResult) => ({
+      value: `${result.value}${maskResult.value}`,
+      cursor: result.cursor + maskResult.cursor,
+      space: `${result.space}${maskResult.space}`,
+    }), { value: '', cursor: 0, space: '' });
 
-/**
- * @param {Object} params
- * @param {Object[]} params.submask
- * @param {String} params.valueCurrent
- * @param {String} params.valueResult
- * @param {Number} params.cursor
- * @param {Number} params.cursorResult
- */
-function procSubmask(params) {
-  var submask = params.submask;
-  var valueCurrent = params.valueCurrent;
-  var valueResult = params.valueResult;
-  var cursor = params.cursor;
-  var cursorResult = params.cursorResult;
-  var setupCursor = false;
+    // Получим значение курсора
+    if (prev.result) {
+      let nextCursor = null;
+      let currCursor = 0;
 
-  for (var index = 0; index < submask.length; index++) {
-    var submaskElement = submask[index];
-    var matchResult = valueCurrent.match(submaskElement.match);
+      if (resultMap) {
+        resultMap.forEach((maskElement, index) => {
+          currCursor += maskElement.cursor;
 
-    if (matchResult) {
-      var valueReplace = matchResult[0].replace(
-        submaskElement.match,
-        submaskElement.replace
-      );
-      var smElCursor = submaskElement.cursor;
-
-      valueResult = `${valueResult}${valueReplace}`;
-      valueCurrent = valueCurrent.replace(submaskElement.match, '');
-
-      if (smElCursor && !setupCursor) {
-        var isCursor = smElCursor.position
-          && smElCursor.position[0] <= cursor
-          && cursor <= smElCursor.position[1];
-        var isFunction = smElCursor.value instanceof Function;
-
-        if (isCursor || isFunction) {
-          if (typeof smElCursor.value === 'number') {
-            setupCursor = true;
-            cursorResult = smElCursor.value;
-          } else if (isFunction) {
-            var smElCursorValueResult = smElCursor.value(
-              valueReplace,
-              cursor,
-              matchResult
-            );
-
-            if (typeof smElCursorValueResult === 'number') {
-              setupCursor = true;
-              cursorResult = smElCursorValueResult;
-            }
+          if (
+            nextCursor === null
+            && maskElement.value !== prev.resultMap[index].value
+          ) {
+            nextCursor = currCursor;
           }
-        }
+        });
       }
-    } else if (submaskElement && submaskElement.space) {
-      valueResult = `${valueResult}${submaskElement.space}`;
-    } else {
-      break;
-    }
-  }
 
-  return {
-    valueCurrent: valueCurrent,
-    valueResult: valueResult,
-    cursorResult: cursorResult
+      console.log('@cursor', nextCursor, prev.resultMap, resultMap);
+
+      result.cursor = nextCursor === null ? cursor : nextCursor;
+    }
+
+    prev.resultMap = resultMap;
+    prev.result = result;
+
+    return { params: { ...params }, result };
   };
+
+  runMask(defaultParams);
+
+  return runMask;
 }
 
-createMask.submasksArray = function (submasks) {
-  return Object.keys(submasks).map(function (key) {
-    return submasks[key];
-  });
-};
-
-module.exports = createMask;
+exports.default = createMask;

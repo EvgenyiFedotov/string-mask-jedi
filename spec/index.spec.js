@@ -1,128 +1,65 @@
-const createMask = require('../src');
-const masks = require('../src/submasks-phones');
+const createMask = require('../src').default;
 
-test('default', () => {
-  const mask = createMask(createMask.submasksArray(masks));
+const maskConfig = [
+  () => ({ match: /(7)/, replace: '+7' }),
+  () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
+  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+  () => ({ match: /(\d)/, replace: ') $1', space: ')  ' }),
+  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
+  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
+  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+];
 
-  expect(mask('78zzz12312312312312', 2))
-    .toEqual({ value: '+7 (812) 312-31-23', cursor: 2, applied: true });
+test('Mask phone', () => {
+  const mask = createMask(maskConfig);
+  const subtests = [[
+    { value: '7', cursor: 1 },
+    { value: '+7', cursor: 2, space: ' (   )    -  -  ' },
+  ], [
+    { value: '+79', cursor: 3 },
+    { value: '+7 (9', cursor: 5, space: '  )    -  -  ' },
+  ], [
+    { value: '+7 (99', cursor: 6 },
+    { value: '+7 (99', cursor: 6, space: ' )    -  -  ' },
+  ], [
+    { value: '+7 (999', cursor: 7 },
+    { value: '+7 (999', cursor: 7, space: ')    -  -  ' },
+  ], [
+    { value: '+7 (9998', cursor: 7 },
+    { value: '+7 (999) 8', cursor: 10, space: '  -  -  ' },
+  ], [
+    { value: '+7 (999) 88', cursor: 11 },
+    { value: '+7 (999) 88', cursor: 11, space: ' -  -  ' },
+  ], [
+    { value: '+7 (999) 888', cursor: 12 },
+    { value: '+7 (999) 888', cursor: 12, space: '-  -  ' },
+  ], [
+    { value: '+7 (999) 8887', cursor: 13 },
+    { value: '+7 (999) 888-7', cursor: 14, space: ' -  ' },
+  ], [
+    { value: '+7 (999) 888-77', cursor: 15 },
+    { value: '+7 (999) 888-77', cursor: 15, space: '-  ' },
+  ], [
+    { value: '+7 (999) 888-776', cursor: 16 },
+    { value: '+7 (999) 888-77-6', cursor: 17, space: ' ' },
+  ], [
+    { value: '+7 (999) 888-77-66', cursor: 18 },
+    { value: '+7 (999) 888-77-66', cursor: 18, space: '' },
+  ], [
+    { value: '+7 (999) 888-77-665', cursor: 19 },
+    { value: '+7 (999) 888-77-66', cursor: 19, space: '' },
+  ], [
+    { value: '+7 (999) 888-77-566', cursor: 19 },
+    { value: '+7 (999) 888-77-56', cursor: 17, space: '' },
+  ], [
+    { value: '+7 (999) 888-577-56', cursor: 19 },
+    { value: '+7 (999) 888-57-75', cursor: 14, space: '' },
+  ]];
 
-  expect(mask('375asdasd312312312312', 2))
-    .toEqual({ value: '+375 (31) 231-23-12', cursor: 4, applied: true });
-
-  expect(mask('3703', 4))
-    .toEqual({ value: '+370 3', cursor: 4, applied: true });
-
-  expect(mask('+370 312311231237778', 4))
-    .toEqual({ value: '+370 312311231237778', cursor: 4, applied: false });
-
-  expect(mask('12asd12123sasd', 4))
-    .toEqual({ value: '+12', cursor: 4, applied: true });
-});
-
-test('params `full` = true', () => {
-  const mask = createMask(
-    createMask.submasksArray(masks),
-    {
-      full: true
-    }
-  );
-
-  expect(mask('78zzz12312312312312', 2))
-    .toEqual({"applied": true,
-      "cursor": 2,
-      "cursorResult": 2,
-      "value": "78zzz12312312312312",
-      "valuePreproc": undefined,
-      "valueResult": "+7 (812) 312-31-23"
-    });
-
-  expect(mask('375asdasd312312312312', 2))
-    .toEqual({"applied": true,
-      "cursor": 2,
-      "cursorResult": 4,
-      "value": "375asdasd312312312312",
-      "valuePreproc": undefined,
-      "valueResult": "+375 (31) 231-23-12"
-    });
-
-  expect(mask('3703', 4))
-    .toEqual({
-      "applied": true,
-      "cursor": 4,
-      "cursorResult": 4,
-      "value": "3703",
-      "valuePreproc": undefined,
-      "valueResult": "+370 3"
-    });
-
-  expect(mask('+370 312311231237778', 4))
-    .toEqual({
-      "applied": false,
-      "cursor": 4,
-      "cursorResult": 4,
-      "value": "+370 312311231237778",
-      "valuePreproc": undefined,
-      "valueResult": "+370 312311231237778"
-  });
-
-  expect(mask('12asd12123sasd', 4))
-    .toEqual({
-      "applied": true,
-      "cursor": 4,
-      "cursorResult": 4,
-      "value": "12asd12123sasd",
-      "valuePreproc": undefined,
-      "valueResult": "+12"
-    });
-});
-
-test('params `preproc`', () => {
-  const mask = createMask(
-    createMask.submasksArray(masks),
-    {
-      preproc: function (value) {
-        return {
-          value: value
-            .replace(/[+ ()-\D]/g, '')
-            .replace(/(\d{18})(.*)/g, '$1')
-        };
-      }
-    }
-  );
-
-  expect(mask('12asd12123sasd', 4))
-    .toEqual({"applied": true, "cursor": 4, "value": "+1212123"});
-});
-
-test('submask with space string', () => {
-  const submasks = [
-    [
-      { match: /^7/, replace: '+7' },
-      { match: /(\d)/, replace: ' ($1', space: ' (_' },
-      { match: /(\d)/, replace: '$1', space: '_' },
-      { match: /(\d)/, replace: '$1', space: '_' },
-      { match: /(\d)/, replace: ') $1', space: ') _' },
-      { match: /(\d)/, replace: '$1', space: '_' },
-      { match: /(\d)/, replace: '$1', space: '_' },
-      { match: /(\d)/, replace: '-$1', space: '-_' },
-      { match: /(\d)/, replace: '$1', space: '_' },
-      { match: /(\d)/, replace: '-$1', space: '-_' },
-      { match: /(\d)/, replace: '$1', space: '_' },
-    ],
-  ];
-
-  const mask = createMask(submasks);
-
-  expect(mask('7', 2))
-    .toEqual({ value: '+7 (___) ___-__-__', cursor: 2, applied: true });
-
-  expect(mask('765', 2))
-    .toEqual({ value: '+7 (65_) ___-__-__', cursor: 2, applied: true });
-
-  expect(mask('7658765', 2))
-    .toEqual({ value: '+7 (658) 765-__-__', cursor: 2, applied: true });
-
-  expect(mask('76587659', 2))
-    .toEqual({ value: '+7 (658) 765-9_-__', cursor: 2, applied: true });
+  subtests.forEach(subtest => expect(mask(subtest[0]).result)
+    .toEqual(subtest[1]));
 });
