@@ -70,8 +70,6 @@ function createMask(mask, config = {}) {
         });
       }
 
-      console.log('@cursor', nextCursor, prev.resultMap, resultMap);
-
       result.cursor = nextCursor === null ? cursor : nextCursor;
     }
 
