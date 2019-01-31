@@ -1,3 +1,6 @@
+const getMaskMap = require('./get-mask-map').default;
+const getCursorBeginDiff = require('./get-cursor-begin-diff').default;
+
 /**
  * @param {Object[]} mask
  * @param {Object} [config]
@@ -6,142 +9,57 @@
 function createMask(mask, config = {}) {
   const {
     defaultParams = { value: '', cursor: 0 },
+    defaultResult = { value: '', space: '', isMatched: false, cursor: null },
   } = config;
-  const prev = { resultMap: [], result: null, params: defaultParams };
+  const prev = {
+    maskMap: [],
+    result: { ...defaultResult },
+    params: { ...defaultParams },
+  };
 
-  /**
-   * @param {Object} params
-   * @param {String} params.value
-   * @param {Number} params.cursor
-   */
-  const runMask = (params) => {
-    let {
-      value = '',
-      cursor = 0,
-    } = params;
-    let currentCursor = cursor;
-
-    let cursorNotDiff = 0;
-
-    // Вычисли курсор который укажет откуда начались изменения
-    if (prev.result) {
-      for (let index = 0; index < value.length; index++) {
-        if (prev.result.value[index] !== value[index]) {
-          cursorNotDiff = index;
-          break;
-        }
-      }
-    }
-
-    console.log('@cursorNotDiff', cursorNotDiff);
-
-    // Проанализируем переданное значение с помощью маски
-    const resultMap = mask.reduce((result, getMaskElement, index) => {
-      const maskElement = getMaskElement(result, index);
-      const matchResult = value.match(maskElement.match);
-      const res = { value: '', cursor: 0, space: '' };
-
-      if (matchResult) {
-        res.value = matchResult[0].replace(
-          maskElement.match,
-          maskElement.replace,
-        );
-
-        res.cursor = res.value.length;
-
-        res.isMatched = true;
-
-        value = value.replace(maskElement.match, '');
-      } else {
-        res.space = maskElement.space || '';
-
-        res.cursor = (maskElement.space || '').length;
-
-        res.isMatched = false;
-
-        value = '';
-      }
-
-      const prevMaxCursor = result[index - 1]
-        ? result[index - 1].maxCursor || 0
-        : 0;
-
-      res.minCursor = prevMaxCursor + 1;
-      res.maxCursor = prevMaxCursor + res.cursor;
-
-
-
-      if (
-        prev.resultMap[index]
-        && prev.resultMap[index].value !== res.value
-        && res.minCursor < currentCursor
-        && res.minCursor <= cursorNotDiff
-      ) {
-        currentCursor += res.value.length - 1;
-      }
-
-      // if (prev.resultMap[index]) {
-      //   res.isChange = prev.resultMap[index].value !== res.value;
-      //   res.isCursor = cursor <= res.maxCursor;
-      // }
-
-      // if (
-      //   prev.resultMap[index]
-      //   && prev.resultMap[index].value !== res.value
-      //   && res.minCursor < cursor
-      //   // && cursor <= res.maxCursor
-      // ) {
-      //   const prevValue = prev.resultMap[index].value.split('');
-      //   const addChange = res.value.split('').reduce((rs, val, index) => {
-      //     if (val !== prevValue[index]) {
-      //       rs++;
-      //     }
-
-      //     return rs;
-      //   }, 0);
-
-      //   currentCursor += res.value.length - addChange;
-      // }
-
-      // if (
-      //   res.minCursor <= cursor
-      //   && cursor <= res.maxCursor
-      // ) {
-      //   cursor += res.cursor - 1;
-      // }
-
-      result.push(res);
-
-      return result;
-    }, []);
-
-    // console.log(currentCursor, resultMap);
+  return (params) => {
+    let { cursor = 0 } = params;
+    const maskMap = getMaskMap(mask, params);
 
     // Получим текущий суммарный результат
-    const result = resultMap.reduce((result, maskResult) => ({
-      value: `${result.value}${maskResult.value}`,
-      space: `${result.space}${maskResult.space}`,
-      isMatched: result.isMatched || maskResult.isMatched,
+    const result = maskMap.reduce((result, el) => ({
+      value: `${result.value}${el.value}`,
+      space: `${result.space}${el.space}`,
+      isMatched: result.isMatched || el.isMatched,
+      cursor: result.cursor,
+    }), { value: '', space: '', isMatched: false, cursor });
 
-      // Установка курсора отлительно элемента маски
-      cursor: (result.cursor === null
-          && maskResult.minCursor <= currentCursor
-          && currentCursor <= maskResult.maxCursor
-        )
-          ? maskResult.maxCursor
-          : result.cursor,
-    }), { value: '', space: '', isMatched: false, cursor: null });
+    // Получим корректное значени курсора
+    const cursorBeginDiff = getCursorBeginDiff(
+      prev.result.value,
+      result.value,
+    );
+    let newCursor = cursor;
 
-    prev.resultMap = resultMap;
+    maskMap.forEach((el) => {
+      if (
+        el.minCursor >= cursorBeginDiff
+        && el.minCursor <= newCursor
+      ) {
+        newCursor += el.value.length - 1;
+      }
+    });
+
+    result.cursor = maskMap.reduce((res, el) => {
+      return (res === null
+        && el.minCursor <= newCursor
+        && newCursor <= el.maxCursor
+      )
+        ? el.maxCursor
+        : res
+    }, null) || newCursor;
+
+    prev.maskMap = maskMap;
     prev.result = result;
     prev.params = params;
 
-    return { params: { ...params }, result };
+    return result;
   };
-
-  runMask(defaultParams);
-
-  return runMask;
 }
 
 exports.default = createMask;
