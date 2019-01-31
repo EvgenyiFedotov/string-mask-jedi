@@ -16,112 +16,51 @@ const maskConfig = [
 
 const maskPhoneRu = createMask(maskConfig);
 
-test('Mask phone [ru] `add`', () => {
-  const subtests = [[
+const testsAdd = [
+  [
     { value: '7', cursor: 1 },
-    { value: '+7', cursor: 2, space: ' (   )    -  -  ' },
-  ], [
+    { value: '+7', cursor: 2, space: ' (   )    -  -  ', isMatched: true },
+  ],
+  [
     { value: '+79', cursor: 3 },
-    { value: '+7 (9', cursor: 5, space: '  )    -  -  ' },
-  ], [
+    { value: '+7 (9', cursor: 5, space: '  )    -  -  ', isMatched: true },
+  ],
+  [
+    { value: '+7 (9', cursor: 3 },
+    { value: '+7 (9', cursor: 5, space: '  )    -  -  ', isMatched: true },
+  ],
+  [
     { value: '+7 (99', cursor: 6 },
-    { value: '+7 (99', cursor: 6, space: ' )    -  -  ' },
-  ], [
+    { value: '+7 (99', cursor: 6, space: ' )    -  -  ', isMatched: true },
+  ],
+  [
     { value: '+7 (999', cursor: 7 },
-    { value: '+7 (999', cursor: 7, space: ')    -  -  ' },
-  ], [
-    { value: '+7 (9998', cursor: 7 },
-    { value: '+7 (999) 8', cursor: 10, space: '  -  -  ' },
-  ], [
-    { value: '+7 (999) 88', cursor: 11 },
-    { value: '+7 (999) 88', cursor: 11, space: ' -  -  ' },
-  ], [
-    { value: '+7 (999) 888', cursor: 12 },
-    { value: '+7 (999) 888', cursor: 12, space: '-  -  ' },
-  ], [
-    { value: '+7 (999) 8887', cursor: 13 },
-    { value: '+7 (999) 888-7', cursor: 14, space: ' -  ' },
-  ], [
-    { value: '+7 (999) 888-77', cursor: 15 },
-    { value: '+7 (999) 888-77', cursor: 15, space: '-  ' },
-  ], [
-    { value: '+7 (999) 888-776', cursor: 16 },
-    { value: '+7 (999) 888-77-6', cursor: 17, space: ' ' },
-  ], [
-    { value: '+7 (999) 888-77-66', cursor: 18 },
-    { value: '+7 (999) 888-77-66', cursor: 18, space: '' },
-  ]];
+    { value: '+7 (999', cursor: 7, space: ')    -  -  ', isMatched: true },
+  ],
+  [
+    { value: '+7 (9998', cursor: 8 },
+    { value: '+7 (999) 8', cursor: 10, space: '  -  -  ', isMatched: true },
+  ],
+  [
+    { value: '+7 (97799) 8', cursor: 7 },
+    { value: '+7 (977) 998', cursor: 7, space: '-  -  ', isMatched: true },
+  ],
+  [
+    { value: '+7 (955577) 998', cursor: 8 },
+    { value: '+7 (955) 577-99-8', cursor: 10, space: ' ', isMatched: true },
+  ],
+  [
+    { value: '+7 (000000955) 577-99-8', cursor: 10 },
+    { value: '+7 (000) 000-95-55', cursor: 12, space: '', isMatched: true },
+  ],
+  // [
+  //   { value: '+7 (1111111111000) 000-95-55', cursor: 14 },
+  //   { value: '+7 (111) 111-11-11', cursor: 18, space: '', isMatched: true },
+  // ],
+];
 
-  subtests.forEach(subtest => expect(maskPhoneRu(subtest[0]).result)
-    .toEqual(subtest[1]));
+testsAdd.forEach((config, index) => {
+  test(`mask phone [ru] \`add\` #${config[2] || index}`, () => {
+    expect(maskPhoneRu(config[0]).result).toEqual(config[1]);
+  });
 });
-
-test('Mask phone [ru] `change`', () => {
-  const subtests = [[
-    { value: '+7 (999) 888-77-665', cursor: 19 },
-    { value: '+7 (999) 888-77-66', cursor: 19, space: '' },
-  ], [
-    { value: '+7 (999) 888-77-566', cursor: 19 },
-    { value: '+7 (999) 888-77-56', cursor: 17, space: '' },
-  ], [
-    { value: '+7 (999) 888-577-56', cursor: 19 },
-    { value: '+7 (999) 888-57-75', cursor: 14, space: '' },
-  ]];
-
-  subtests.forEach(subtest => expect(maskPhoneRu(subtest[0]).result)
-    .toEqual(subtest[1]));
-});
-
-test('Mask phone [ru] `remove`', () => {
-  const subtests = [[
-    { value: '+7 (999) 888-57-7', cursor: 17 },
-    { value: '+7 (999) 888-57-7', cursor: 17, space: ' ' },
-  ], [
-    { value: '+7 (999) 888-57-', cursor: 16 },
-    { value: '+7 (999) 888-57', cursor: 15, space: '-  ' },
-  ], [
-    { value: '+7 (999) 888-5', cursor: 14 },
-    { value: '+7 (999) 888-5', cursor: 14, space: ' -  ' },
-  ], [
-    { value: '+7 (999) 888-', cursor: 13 },
-    { value: '+7 (999) 888', cursor: 12, space: '-  -  ' },
-  ], [
-    { value: '+7 (999) 88', cursor: 11 },
-    { value: '+7 (999) 88', cursor: 11, space: ' -  -  ' },
-  ], [
-    { value: '+7 (999) 8', cursor: 10 },
-    { value: '+7 (999) 8', cursor: 10, space: '  -  -  ' },
-  ], [
-    { value: '+7 (999) ', cursor: 9 },
-    { value: '+7 (999', cursor: 7, space: ')    -  -  ' },
-  ], [
-    { value: '+7 (99', cursor: 6 },
-    { value: '+7 (99', cursor: 6, space: ' )    -  -  ' },
-  ], [
-    { value: '+7 (9', cursor: 5 },
-    { value: '+7 (9', cursor: 5, space: '  )    -  -  ' },
-  ], [
-    { value: '+7 (', cursor: 4 },
-    { value: '+7', cursor: 2, space: ' (   )    -  -  ' },
-  ], [
-    { value: '+', cursor: 1 },
-    { value: '', cursor: 0, space: ' (   )    -  -  ' },
-  ]];
-
-  subtests.forEach(subtest => expect(maskPhoneRu(subtest[0]).result)
-    .toEqual(subtest[1]));
-});
-
-test('Mask phone [ru] `ctrl+V`', () => {
-  const subtests = [[
-    { value: '+7 (999) 888-57-7', cursor: 0 },
-    { value: '+7 (999) 888-57-7', cursor: 17, space: ' ' },
-  ]];
-
-  subtests.forEach(subtest =>
-    expect(maskPhoneRu(subtest[0]).result)
-      .toEqual(subtest[1])
-  );
-});
-
-test('Mask phone [ru] `remove selected text`', () => {});

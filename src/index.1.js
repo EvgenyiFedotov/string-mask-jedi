@@ -1,89 +1,109 @@
 /**
  * @param {Object[]} mask
  * @param {Object} [config]
+ * @param {Object} [config.defaultParams]
  */
 function createMask(mask, config = {}) {
-  return (defaultParams = { value: '', cursor: 0 }) => {
-    const prev = {
-      resultMap: null,
-      result: null,
-    };
+  const {
+    defaultParams = { value: '', cursor: 0 },
+  } = config;
+  const prev = { resultMap: null, result: null };
 
-    /**
-     * @param {Object} params
-     * @param {String} params.value
-     * @param {Number} params.cursor
-     */
-    const run = (params) => {
-      let { value, cursor } = params;
+  /**
+   * @param {Object} params
+   * @param {String} params.value
+   * @param {Number} params.cursor
+   */
+  const runMask = (params) => {
+    let {
+      value = '',
+      cursor = 0,
+    } = params;
 
-      if (config.after) {
-        ({ value, cursor = cursor } = config.after({ value, cursor }));
+    // Проанализируем переданное значение с помощью маски
+    const resultMap = mask.reduce((result, getMaskElement, index) => {
+      const maskElement = getMaskElement(result, index);
+      const matchResult = value.match(maskElement.match);
+      const res = { value: '', cursor: 0, space: '' };
+
+      if (matchResult) {
+        res.value = matchResult[0].replace(
+          maskElement.match,
+          maskElement.replace,
+        );
+
+        res.cursor = res.value.length;
+
+        res.isMatched = true;
+
+        value = value.replace(maskElement.match, '');
+      } else {
+        res.space = maskElement.space || '';
+
+        res.cursor = (maskElement.space || '').length;
+
+        res.isMatched = false;
+
+        value = '';
       }
 
-      const resultMap = [];
+      const prevMaxCursor = result[index - 1]
+        ? result[index - 1].maxCursor || 0
+        : 0;
 
-      mask.forEach((maskElement, index) => {
-        if (maskElement instanceof Function) {
-          maskElement = maskElement(resultMap, index);
-        }
+      res.minCursor = prevMaxCursor + 1;
+      res.maxCursor = prevMaxCursor + res.cursor;
 
-        const matchResult = value.match(maskElement.match);
-        const res = { value: '', cursor: 0, space: '' };
+      result.push(res);
 
-        if (matchResult) {
-          res.value = matchResult[0].replace(maskElement.match, maskElement.replace);
-          res.cursor = res.value.length;
+      return result;
+    }, []);
 
-          value = value.replace(maskElement.match, '');
-        } else {
-          res.space = maskElement.space;
+    // console.log(resultMap);
 
-          value = '';
-        }
+    // Получим текущий суммарный результат
+    const result = resultMap.reduce((result, maskResult) => ({
+      value: `${result.value}${maskResult.value}`,
+      space: `${result.space}${maskResult.space}`,
+      isMatched: result.isMatched || maskResult.isMatched,
+      cursor: (result.cursor === null
+          && maskResult.minCursor <= cursor
+          && cursor <= maskResult.maxCursor
+        )
+          ? maskResult.maxCursor
+          : result.cursor,
+    }), { value: '', space: '', isMatched: false, cursor: null });
 
-        resultMap.push(res);
-      });
+    // Получим значение курсора
+    // if (prev.result) {
+    //   let nextCursor = null;
+    //   let currCursor = 0;
 
-      const result = resultMap.reduce((result, maskResult) => ({
-        value: `${result.value}${maskResult.value}`,
-        cursor: result.cursor + maskResult.cursor,
-        space: `${result.space}${maskResult.space}`,
-      }), { value: '', cursor: 0, space: '' });
+    //   if (resultMap) {
+    //     resultMap.forEach((maskElement, index) => {
+    //       currCursor += maskElement.cursor;
 
-      if (prev.result) {
-        let nextCursor = null;
-        let currCursor = 0;
+    //       if (
+    //         nextCursor === null
+    //         && maskElement.value !== prev.resultMap[index].value
+    //       ) {
+    //         nextCursor = currCursor;
+    //       }
+    //     });
+    //   }
 
-        if (resultMap) {
-          resultMap.forEach((maskElement, index) => {
-            currCursor += maskElement.cursor;
+    //   result.cursor = nextCursor === null ? cursor : nextCursor;
+    // }
 
-            if (
-              nextCursor === null
-              && maskElement.value !== prev.resultMap[index].value
-            ) {
-              nextCursor = currCursor;
-            }
-          });
-        }
+    prev.resultMap = resultMap;
+    prev.result = result;
 
-        result.cursor = nextCursor === null ? cursor : nextCursor;
-      }
-
-      prev.resultMap = resultMap;
-      prev.result = result;
-
-      return {
-        params: { ...params },
-        result,
-      };
-    };
-
-    run(defaultParams);
-
-    return run;
+    return { params: { ...params }, result };
   };
+
+  runMask(defaultParams);
+
+  return runMask;
 }
 
 exports.default = createMask;

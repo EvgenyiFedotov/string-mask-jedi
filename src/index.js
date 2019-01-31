@@ -7,7 +7,7 @@ function createMask(mask, config = {}) {
   const {
     defaultParams = { value: '', cursor: 0 },
   } = config;
-  const prev = { resultMap: null, result: null };
+  const prev = { resultMap: [], result: null, params: defaultParams };
 
   /**
    * @param {Object} params
@@ -19,6 +19,11 @@ function createMask(mask, config = {}) {
       value = '',
       cursor = 0,
     } = params;
+    let currentCursor = cursor;
+
+    let cursorNotDiff = 0;
+
+    // Вычисли курсор который укажет откуда начались изменения
 
     // Проанализируем переданное значение с помощью маски
     const resultMap = mask.reduce((result, getMaskElement, index) => {
@@ -31,50 +36,84 @@ function createMask(mask, config = {}) {
           maskElement.match,
           maskElement.replace,
         );
+
         res.cursor = res.value.length;
+
+        res.isMatched = true;
 
         value = value.replace(maskElement.match, '');
       } else {
         res.space = maskElement.space || '';
 
+        res.cursor = (maskElement.space || '').length;
+
+        res.isMatched = false;
+
         value = '';
       }
+
+      const prevMaxCursor = result[index - 1]
+        ? result[index - 1].maxCursor || 0
+        : 0;
+
+      res.minCursor = prevMaxCursor + 1;
+      res.maxCursor = prevMaxCursor + res.cursor;
+
+      // if (prev.resultMap[index]) {
+      //   res.isChange = prev.resultMap[index].value !== res.value;
+      //   res.isCursor = cursor <= res.maxCursor;
+      // }
+
+      // if (
+      //   prev.resultMap[index]
+      //   && prev.resultMap[index].value !== res.value
+      //   && res.minCursor < cursor
+      //   // && cursor <= res.maxCursor
+      // ) {
+      //   const prevValue = prev.resultMap[index].value.split('');
+      //   const addChange = res.value.split('').reduce((rs, val, index) => {
+      //     if (val !== prevValue[index]) {
+      //       rs++;
+      //     }
+
+      //     return rs;
+      //   }, 0);
+
+      //   currentCursor += res.value.length - addChange;
+      // }
+
+      // if (
+      //   res.minCursor <= cursor
+      //   && cursor <= res.maxCursor
+      // ) {
+      //   cursor += res.cursor - 1;
+      // }
 
       result.push(res);
 
       return result;
     }, []);
 
+    // console.log(currentCursor, resultMap);
+
     // Получим текущий суммарный результат
     const result = resultMap.reduce((result, maskResult) => ({
       value: `${result.value}${maskResult.value}`,
-      cursor: result.cursor + maskResult.cursor,
       space: `${result.space}${maskResult.space}`,
-    }), { value: '', cursor: 0, space: '' });
+      isMatched: result.isMatched || maskResult.isMatched,
 
-    // Получим значение курсора
-    if (prev.result) {
-      let nextCursor = null;
-      let currCursor = 0;
-
-      if (resultMap) {
-        resultMap.forEach((maskElement, index) => {
-          currCursor += maskElement.cursor;
-
-          if (
-            nextCursor === null
-            && maskElement.value !== prev.resultMap[index].value
-          ) {
-            nextCursor = currCursor;
-          }
-        });
-      }
-
-      result.cursor = nextCursor === null ? cursor : nextCursor;
-    }
+      // Установка курсора отлительно элемента маски
+      cursor: (result.cursor === null
+          && maskResult.minCursor <= currentCursor
+          && currentCursor <= maskResult.maxCursor
+        )
+          ? maskResult.maxCursor
+          : result.cursor,
+    }), { value: '', space: '', isMatched: false, cursor: null });
 
     prev.resultMap = resultMap;
     prev.result = result;
+    prev.params = params;
 
     return { params: { ...params }, result };
   };
