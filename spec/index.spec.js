@@ -53,10 +53,10 @@ const testsAdd = [
     { value: '+7 (000000955) 577-99-8', cursor: 10 },
     { value: '+7 (000) 000-95-55', cursor: 12, space: '', isMatched: true },
   ],
-  // [
-  //   { value: '+7 (1111111111000) 000-95-55', cursor: 14 },
-  //   { value: '+7 (111) 111-11-11', cursor: 18, space: '', isMatched: true },
-  // ],
+  [
+    { value: '+7 (1111111111000) 000-95-55', cursor: 14 },
+    { value: '+7 (111) 111-11-11', cursor: 18, space: '', isMatched: true },
+  ],
 ];
 
 testsAdd.forEach((config, index) => {

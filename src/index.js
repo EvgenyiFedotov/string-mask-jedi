@@ -24,6 +24,16 @@ function createMask(mask, config = {}) {
     let cursorNotDiff = 0;
 
     // Вычисли курсор который укажет откуда начались изменения
+    if (prev.result) {
+      for (let index = 0; index < value.length; index++) {
+        if (prev.result.value[index] !== value[index]) {
+          cursorNotDiff = index;
+          break;
+        }
+      }
+    }
+
+    console.log('@cursorNotDiff', cursorNotDiff);
 
     // Проанализируем переданное значение с помощью маски
     const resultMap = mask.reduce((result, getMaskElement, index) => {
@@ -58,6 +68,17 @@ function createMask(mask, config = {}) {
 
       res.minCursor = prevMaxCursor + 1;
       res.maxCursor = prevMaxCursor + res.cursor;
+
+
+
+      if (
+        prev.resultMap[index]
+        && prev.resultMap[index].value !== res.value
+        && res.minCursor < currentCursor
+        && res.minCursor <= cursorNotDiff
+      ) {
+        currentCursor += res.value.length - 1;
+      }
 
       // if (prev.resultMap[index]) {
       //   res.isChange = prev.resultMap[index].value !== res.value;
