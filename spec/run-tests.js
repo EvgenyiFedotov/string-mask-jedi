@@ -2,7 +2,7 @@ const createMask = require('../src').default;
 
 function runTests(maskConfig, tests) {
   Object.keys(tests).forEach((key) => {
-    const mask = createMask(maskConfig);
+    const mask = createMask(...maskConfig);
 
     tests[key].forEach((config, index) => {
       test(

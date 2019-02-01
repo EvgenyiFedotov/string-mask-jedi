@@ -5,6 +5,8 @@ const getCursorBeginDiff = require('./get-cursor-begin-diff').default;
  * @param {Object[]} mask
  * @param {Object} [config]
  * @param {Object} [config.defaultParams]
+ * @param {Object} [config.defaultResult]
+ * @param {Function} [config.before]
  */
 function createMask(mask, config = {}) {
   const {
@@ -18,8 +20,13 @@ function createMask(mask, config = {}) {
   };
 
   return (params) => {
-    let { cursor = 0 } = params;
-    const maskMap = getMaskMap(mask, params);
+    // Преобработка переданных параметров
+    if (config.before) {
+      params = config.before(params) || params;
+    }
+
+    let { value = '', cursor = 0 } = params;
+    const maskMap = getMaskMap(mask, { value, cursor });
 
     // Получим текущий суммарный результат
     const result = maskMap.reduce((result, el) => ({

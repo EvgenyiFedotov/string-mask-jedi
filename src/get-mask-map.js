@@ -2,7 +2,7 @@ function getMaskMap(mask, params) {
   let { value = '' } = params;
 
   return mask.reduce((result, getMaskElement, index) => {
-    const maskElement = getMaskElement(result, index);
+    const maskElement = getMaskElement(result, value, index);
     const matchResult = value.match(maskElement.match);
     const res = { value: '', cursor: 0, space: '' };
 
