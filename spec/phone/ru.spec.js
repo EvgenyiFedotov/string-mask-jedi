@@ -1,18 +1,5 @@
-const createMask = require('../src').default;
-
-const maskConfig = [
-  () => ({ match: /(^7|\+7)/, replace: '+7' }),
-  () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: ') $1', space: ')  ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-];
+const runTests = require('../run-tests').default;
+const maskConfig =require('../../src/masks/phone/ru').default;
 
 const tests = {
   add: [
@@ -112,15 +99,33 @@ const tests = {
       { value: '+7 (999', cursor: 7, space: ')    -  -  ', isMatched: true },
     ],
   ],
+
+  change: [
+    [
+      { value: '79998887766', cursor: 11 },
+      { value: '+7 (999) 888-77-66', cursor: 18, space: '', isMatched: true },
+    ],
+    [
+      { value: '+7 (999) 888-77-656', cursor: 18 },
+      { value: '+7 (999) 888-77-65', cursor: 18, space: '', isMatched: true },
+    ],
+    [
+      { value: '+7 (999) 888-77-4465', cursor: 18 },
+      { value: '+7 (999) 888-77-44', cursor: 18, space: '', isMatched: true },
+    ],
+    [
+      { value: '+7 (999) 888-733337-44', cursor: 18 },
+      { value: '+7 (999) 888-73-33', cursor: 18, space: '', isMatched: true },
+    ],
+    [
+      { value: '+7 (999) 822-73-33', cursor: 12 },
+      { value: '+7 (999) 822-73-33', cursor: 12, space: '', isMatched: true },
+    ],
+    [
+      { value: '+7 (911122-73-33', cursor: 8 },
+      { value: '+7 (911) 122-73-33', cursor: 10, space: '', isMatched: true },
+    ],
+  ]
 };
 
-Object.keys(tests).forEach((key) => {
-  const maskPhoneRu = createMask(maskConfig);
-
-  tests[key].forEach((config, index) => {
-    test(`phone [ru] \`${key}\` #${config[2] || index}`, () => {
-      expect(maskPhoneRu(config[0]))
-      .toEqual(config[1]);
-    });
-  });
-});
+runTests(maskConfig, tests);

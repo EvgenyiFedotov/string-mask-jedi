@@ -54,6 +54,10 @@ function createMask(mask, config = {}) {
         : res
     }, null) || newCursor;
 
+    if (result.cursor > result.value.length) {
+      result.cursor = result.value.length;
+    }
+
     prev.maskMap = maskMap;
     prev.result = result;
     prev.params = params;
