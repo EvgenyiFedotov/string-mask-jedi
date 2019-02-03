@@ -1,11 +1,10 @@
-const combine = require('../src/combine').default;
-const phoneMasks = require('../src/masks/phone').default;
-const createMask = require('../src').default;
-const runTests = require('./run-tests').default;
+const createMask = require('../src');
+const { combine, masks } = require('../src');
+const runTests = require('./run-tests');
 
 const configMask = [
-  createMask(...phoneMasks.ru),
-  createMask(...phoneMasks.code),
+  createMask(...masks.phone.ru),
+  createMask(...masks.phone.code),
 ];
 const tests = {
   add: [

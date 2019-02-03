@@ -40,4 +40,4 @@ function getMaskMap(mask, params) {
   }, []);
 }
 
-exports.default = getMaskMap;
+module.exports = getMaskMap;

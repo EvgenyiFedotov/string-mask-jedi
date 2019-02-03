@@ -1,4 +1,4 @@
-const createMask = require('../src').default;
+const createMask = require('../src');
 
 function runTests(maskConfig, tests, creatorMask = createMask) {
   Object.keys(tests).forEach((key) => {
@@ -13,4 +13,4 @@ function runTests(maskConfig, tests, creatorMask = createMask) {
   });
 }
 
-exports.default = runTests;
+module.exports = runTests;

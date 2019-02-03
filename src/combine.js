@@ -16,4 +16,4 @@ function combine(...args) {
   };
 }
 
-exports.default = combine;
+module.exports = combine;

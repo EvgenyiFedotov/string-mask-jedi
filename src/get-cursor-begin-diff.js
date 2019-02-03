@@ -22,4 +22,4 @@ function getCursorBeginDiff(value1, value2) {
   return result;
 }
 
-exports.default = getCursorBeginDiff;
+module.exports = getCursorBeginDiff;

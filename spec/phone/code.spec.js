@@ -1,5 +1,5 @@
-const runTests = require('../run-tests').default;
-const maskConfig =require('../../src/masks/phone/code').default;
+const runTests = require('../run-tests');
+const maskConfig =require('../../src/masks/phone/code');
 
 const tests = {
   add: [

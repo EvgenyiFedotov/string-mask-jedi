@@ -1,5 +1,5 @@
-const runTests = require('./run-tests').default;
-const maskConfig = require('../src/masks/time').default;
+const runTests = require('./run-tests');
+const { masks } = require('../src');
 
 const tests = {
   'add default': [
@@ -131,4 +131,4 @@ const tests = {
   ],
 };
 
-runTests(maskConfig, tests);
+runTests(masks.time, tests);

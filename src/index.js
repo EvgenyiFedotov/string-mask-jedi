@@ -1,5 +1,7 @@
-const getMaskMap = require('./get-mask-map').default;
-const getCursorBeginDiff = require('./get-cursor-begin-diff').default;
+const getMaskMap = require('./get-mask-map');
+const getCursorBeginDiff = require('./get-cursor-begin-diff');
+const combine = require('./combine');
+const masks = require('./masks');
 
 /**
  * @param {Object[]} mask
@@ -73,4 +75,8 @@ function createMask(mask, config = {}) {
   };
 }
 
-exports.default = createMask;
+module.exports = createMask;
+module.exports.getMaskMap = getMaskMap;
+module.exports.getCursorBeginDiff = getCursorBeginDiff;
+module.exports.combine = combine;
+module.exports.masks = masks;

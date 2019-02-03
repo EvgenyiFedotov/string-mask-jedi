@@ -1,4 +1,4 @@
-exports.default = [
+module.exports = [
   [
     () => ({ match: /([012])/, replace: '$1', space: '_' }),
     maskMap => ({

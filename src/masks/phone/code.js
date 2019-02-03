@@ -1,5 +1,4 @@
-
-exports.default = [
+module.exports = [
   [
     () => ({ match: /(\d)/, replace: '+$1' }),
     () => ({ match: /(\d)/, replace: ' $1' }),

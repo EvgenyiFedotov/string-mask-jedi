@@ -1,7 +1,4 @@
-const ru = require('./ru').default;
-const code = require('./code').default;
+const ru = require('./ru');
+const code = require('./code');
 
-exports.default = {
-  ru,
-  code,
-};
+module.exports = { ru, code };
