@@ -52,6 +52,21 @@ const tests = {
       { value: '+9 888 7666666', cursor: 14, space: '', isMatched: true },
     ],
   ],
+
+  change: [
+    [
+      { value: '+9 888 7666666', cursor: 14 },
+      { value: '+9 888 7666666', cursor: 14, space: '', isMatched: true },
+    ],
+    [
+      { value: '+9 555 7666666', cursor: 6 },
+      { value: '+9 555 7666666', cursor: 6, space: '', isMatched: true },
+    ],
+    [
+      { value: '+9 555 7866666', cursor: 9 },
+      { value: '+9 555 7866666', cursor: 9, space: '', isMatched: true },
+    ],
+  ],
 };
 
 runTests(maskConfig, tests);

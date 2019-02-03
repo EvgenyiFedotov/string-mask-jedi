@@ -47,13 +47,15 @@ function createMask(mask, config = {}) {
 
     maskMap.forEach((el) => {
       if (
-        el.minCursor >= cursorBeginDiff
+        // ?  > || >=
+        el.minCursor > cursorBeginDiff
         && el.minCursor <= newCursor
       ) {
         newCursor += el.value.length - 1;
       }
     });
 
+    // Получим курсор относительно елемента маски
     result.cursor = maskMap.reduce((res, el) => {
       return (res === null
         && el.minCursor <= newCursor

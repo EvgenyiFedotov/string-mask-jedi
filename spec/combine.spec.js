@@ -14,7 +14,7 @@ const tests = {
     ],
     [
       { value: '+', cursor: 1 },
-      { value: '', cursor: 0, space: '', isMatched: true },
+      { value: '', cursor: 0, space: '', isMatched: false },
     ],
     [
       { value: '9888777', cursor: 7 },
@@ -42,7 +42,7 @@ const tests = {
     ],
     [
       { value: '+', cursor: 1 },
-      { value: '', cursor: 0, space: '', isMatched: true },
+      { value: '', cursor: 0, space: '', isMatched: false },
     ],
   ],
 };
