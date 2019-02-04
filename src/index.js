@@ -2,7 +2,6 @@ const getMaskMap = require('./get-mask-map');
 const getCursorBeginDiff = require('./get-cursor-begin-diff');
 const combine = require('./combine');
 const masks = require('./masks');
-const maskField = require('./mask-field');
 
 /**
  * @param {Object[]} mask
@@ -83,4 +82,3 @@ module.exports.getMaskMap = getMaskMap;
 module.exports.getCursorBeginDiff = getCursorBeginDiff;
 module.exports.combine = combine;
 module.exports.masks = masks;
-module.exports.maskField = maskField;
