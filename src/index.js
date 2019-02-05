@@ -1,166 +1,86 @@
-'use strict';
+const getMaskMap = require('./get-mask-map');
+const getCursorBeginDiff = require('./get-cursor-begin-diff');
+const combine = require('./combine');
+const masks = require('./masks');
+const repeatMaskElement = require('./repeat-mask-element');
 
 /**
- * @param {Array} submask
- * @param {Object} [params]
- * @param {Function} [params.preproc]
- * @param {Boolean} [params.full]
+ * @param {Object[]} mask
+ * @param {Object} [config]
+ * @param {Object} [config.defaultParams]
+ * @param {Object} [config.defaultResult]
+ * @param {Function} [config.before]
  */
-function createMask(submasks, params) {
-  params = params instanceof Object ? params : {};
+function createMask(mask, config = {}) {
+  const {
+    defaultParams = { value: '', cursor: 0 },
+    defaultResult = { value: '', space: '', isMatched: false, cursor: null },
+  } = config;
+  const prev = {
+    maskMap: [],
+    result: { ...defaultResult },
+    params: { ...defaultParams },
+  };
 
-  var preproc = params.preproc;
-  var full = params.full;
-
-  if (!(submasks instanceof Array)) {
-    throw new Error('First params createMask is not Array');
-  }
-
-  if (preproc && !(preproc instanceof Function)) {
-    throw new Error('Second params createMask is not Function');
-  }
-
-  /**
-   * @param {Stromg} value
-   * @param {Number} cursor
-   */
-  function Mask(value, cursor) {
-    var valuePreproc = preproc && preproc(value, cursor);
-    var valueCurrent = valuePreproc
-      ? (valuePreproc.value !== undefined ? valuePreproc.value : value)
-      : value;
-    var valueResult = '';
-    var valueResultReplace = '';
-    var applied = false;
-    var cursorResult = valuePreproc
-      ? (valuePreproc.cursor || cursor || value.length)
-      : (cursor || value.length);
-
-    for (var submasksIndex = 0; submasksIndex < submasks.length; submasksIndex++) {
-      var submaskResult = procSubmask({
-        submask: submasks[submasksIndex],
-        valueCurrent: valueCurrent,
-        valueResult: valueResult,
-        valueResultReplace: valueResultReplace,
-        cursor: cursor === undefined ? cursorResult : cursor,
-        cursorResult: cursorResult,
-      });
-
-      valueCurrent = submaskResult.valueCurrent;
-      valueResult = submaskResult.valueResult;
-      cursorResult = submaskResult.cursorResult;
-      valueResultReplace = submaskResult.valueResultReplace;
-
-      if (valueResult) {
-        break;
-      }
+  return (params) => {
+    // Преобработка переданных параметров
+    if (config.before) {
+      params = config.before(params) || params;
     }
 
-    if (valueResult && valueResult !== value) {
-      applied = true;
-    } else if (!valueResult && valuePreproc) {
-      valueResult = valuePreproc.value || value;
-      cursorResult = valuePreproc.cursor || cursor;
-    } else {
-      valueResult = value;
-      cursorResult = cursor;
+    let { value = '', cursor = 0 } = params;
+    const maskMap = getMaskMap(mask, { value, cursor });
+
+    // Получим текущий суммарный результат
+    const result = maskMap.reduce((result, el) => ({
+      value: `${result.value}${el.value}`,
+      space: `${result.space}${el.space}`,
+      isMatched: result.isMatched || el.isMatched,
+      cursor: result.cursor,
+    }), { value: '', space: '', isMatched: false, cursor });
+
+    // Получим корректное значени курсора
+    const cursorBeginDiff = getCursorBeginDiff(
+      prev.result.value,
+      result.value,
+    );
+    let newCursor = cursor;
+
+    maskMap.forEach((el) => {
+      if (
+        // ?  > || >=
+        el.minCursor > cursorBeginDiff
+        && el.minCursor <= newCursor
+      ) {
+        newCursor += el.value.length - 1;
+      }
+    });
+
+    // Получим курсор относительно елемента маски
+    result.cursor = maskMap.reduce((res, el) => {
+      return (res === null
+        && el.minCursor <= newCursor
+        && newCursor <= el.maxCursor
+      )
+        ? el.maxCursor
+        : res
+    }, null) || newCursor;
+
+    if (result.cursor > result.value.length) {
+      result.cursor = result.value.length;
     }
 
-    return full === true
-      ? {
-        value: value,
-        cursor: cursor,
-        valuePreproc: valuePreproc,
-        valueResult: valueResult,
-        valueResultReplace: valueResultReplace,
-        cursorResult: cursorResult,
-        applied: applied
-      }
-      : {
-        value: valueResult,
-        cursor: cursorResult,
-        applied: applied
-      };
-  }
+    prev.maskMap = maskMap;
+    prev.result = result;
+    prev.params = params;
 
-  return Mask;
-};
-
-/**
- * @param {Object} params
- * @param {Object[]} params.submask
- * @param {String} params.valueCurrent
- * @param {String} params.valueResult
- * @param {Number} params.cursor
- * @param {Number} params.cursorResult
- */
-function procSubmask(params) {
-  var submask = params.submask;
-  var valueCurrent = params.valueCurrent;
-  var valueResult = params.valueResult;
-  var valueResultReplace = params.valueResult;
-  var cursor = params.cursor;
-  var cursorResult = params.cursorResult;
-  var setupCursor = false;
-
-  for (var index = 0; index < submask.length; index++) {
-    var submaskElement = submask[index];
-    var matchResult = valueCurrent.match(submaskElement.match);
-
-    if (matchResult && submaskElement.replace) {
-      var valueReplace = matchResult[0].replace(
-        submaskElement.match,
-        submaskElement.replace
-      );
-      var smElCursor = submaskElement.cursor;
-
-      valueResult = valueResult + valueReplace;
-      valueResultReplace = valueResultReplace + valueReplace;
-      valueCurrent = valueCurrent.replace(submaskElement.match, '');
-
-      if (smElCursor && !setupCursor) {
-        var isCursor = smElCursor.position
-          && smElCursor.position[0] <= cursor
-          && cursor <= smElCursor.position[1];
-        var isFunction = smElCursor.value instanceof Function;
-
-        if (isCursor || isFunction) {
-          if (typeof smElCursor.value === 'number') {
-            setupCursor = true;
-            cursorResult = smElCursor.value;
-          } else if (isFunction) {
-            var smElCursorValueResult = smElCursor.value(
-              valueReplace,
-              cursor,
-              matchResult
-            );
-
-            if (typeof smElCursorValueResult === 'number') {
-              setupCursor = true;
-              cursorResult = smElCursorValueResult;
-            }
-          }
-        }
-      }
-    } else if (submaskElement.space) {
-      valueResult = valueResult + submaskElement.space;
-    } else {
-      break;
-    }
-  }
-
-  return {
-    valueCurrent: valueCurrent,
-    valueResult: valueResult,
-    cursorResult: cursorResult,
-    valueResultReplace: valueResultReplace
+    return result;
   };
 }
 
-createMask.submasksArray = function (submasks) {
-  return Object.keys(submasks).map(function (key) {
-    return submasks[key];
-  });
-};
-
 module.exports = createMask;
+module.exports.getMaskMap = getMaskMap;
+module.exports.getCursorBeginDiff = getCursorBeginDiff;
+module.exports.combine = combine;
+module.exports.masks = masks;
+module.exports.repeatMaskElement = repeatMaskElement;
