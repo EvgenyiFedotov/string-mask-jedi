@@ -2,6 +2,7 @@ const getMaskMap = require('./get-mask-map');
 const getCursorBeginDiff = require('./get-cursor-begin-diff');
 const combine = require('./combine');
 const masks = require('./masks');
+const repeatMaskElement = require('./repeat-mask-element');
 
 /**
  * @param {Object[]} mask
@@ -82,3 +83,4 @@ module.exports.getMaskMap = getMaskMap;
 module.exports.getCursorBeginDiff = getCursorBeginDiff;
 module.exports.combine = combine;
 module.exports.masks = masks;
+module.exports.repeatMaskElement = repeatMaskElement;

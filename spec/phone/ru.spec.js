@@ -12,10 +12,6 @@ const tests = {
       { value: '+7 (9', cursor: 5, space: '  )    -  -  ', isMatched: true },
     ],
     [
-      { value: '+7 (9', cursor: 3 },
-      { value: '+7 (9', cursor: 5, space: '  )    -  -  ', isMatched: true },
-    ],
-    [
       { value: '+7 (99', cursor: 6 },
       { value: '+7 (99', cursor: 6, space: ' )    -  -  ', isMatched: true },
     ],
