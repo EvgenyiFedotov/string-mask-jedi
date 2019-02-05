@@ -3,15 +3,24 @@
 This package allows you to create dynamic masks for the input field with the ability to control the cursor position.
 
 #### Examples
-[Config phone mask](#config-phone-mask)  
-[Config time mask](#config-time-mask)  
-[Config phone mask with repeat elements](#config-phone-mask-with-repeat-elements)  
-[Сreate a mask with a handler](#create-a-mask-with-a-handler)  
-[Create mask](#create-mask)  
-[Create combine mask](#create-combine-mask)  
-[Use mask phone](#use-mask-phone)  
-[Use mask combine phone](#use-mask-combine-phone)  
-[Use mask phone in React.Component](#use-mask-phone-in-react.component)  
+[Config phone mask](#config-phone-mask)
+
+[Config time mask](#config-time-mask)
+
+[Config phone mask with repeat elements](#config-phone-mask-with-repeat-elements)
+
+[Сreate a mask with a handler](#create-a-mask-with-a-handler)
+
+[Create mask](#create-mask)
+
+[Create combine mask](#create-combine-mask)
+
+[Use mask phone](#use-mask-phone)
+
+[Use mask combine phone](#use-mask-combine-phone)
+
+[Use mask phone in React.Component](#use-mask-phone-in-react.component)
+
 
 ## Examples
 ### Config phone mask
