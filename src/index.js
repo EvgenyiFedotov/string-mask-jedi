@@ -3,6 +3,7 @@ const getCursorBeginDiff = require('./get-cursor-begin-diff');
 const combine = require('./combine');
 const masks = require('./masks');
 const repeatMaskElement = require('./repeat-mask-element');
+const createConfigMask = require('./create-config-mask');
 
 /**
  * @param {Object[]} mask
@@ -84,3 +85,4 @@ module.exports.getCursorBeginDiff = getCursorBeginDiff;
 module.exports.combine = combine;
 module.exports.masks = masks;
 module.exports.repeatMaskElement = repeatMaskElement;
+module.exports.createConfigMask = createConfigMask;

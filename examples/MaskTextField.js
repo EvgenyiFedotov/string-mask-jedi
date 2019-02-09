@@ -44,7 +44,7 @@ class MaskTextField extends Component {
 
   onFocus = () => this.focus = true
 
-  onBlur = () => this.focur = false
+  onBlur = () => this.focus = false
 
   render = () => (
     <input
