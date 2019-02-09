@@ -6,8 +6,9 @@ This package allows you to create dynamic masks for the input field with the abi
 [Config phone mask](#config-phone-mask)  
 [Config time mask](#config-time-mask)  
 [Config phone mask with repeat elements](#config-phone-mask-with-repeat-elements)  
-[Сreate a mask with a handler](#сreate-a-mask-with-a-handler)  
+[Create config mask by string](#create-config-mask-by-string)  
 [Create mask](#create-mask)  
+[Сreate a mask with a handler](#сreate-a-mask-with-a-handler)  
 [Create combine mask](#create-combine-mask)  
 [Use mask phone](#use-mask-phone)  
 [Use mask combine phone](#use-mask-combine-phone)  
@@ -65,6 +66,58 @@ const configMask = [
 // '95557866666' => '+9 555 7866666'
 ```
 
+### Create config mask by string
+
+```javascript
+import { createConfigMask } from 'string-mask-jedi';  
+
+const configMasksPhoneCode = createConfigMask('+d ddd ddddddd');
+
+// configMasksPhoneCode => [
+// () => ({ match: /(\d)/, replace: '+$1', space: null }),
+// () => ({ match: /(\d)/, replace: ' $1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: ' $1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// () => ({ match: /(\d)/, replace: '$1', space: null }),
+// ]  
+
+const configMaksPhoneRu =  createConfigMask('7 (ddd) ddd-dd-dd', {
+  space: ' ',
+  translation: {
+    '7': { match: '^7|^\\+7', replace: '+7', space: '' },
+  },
+});
+
+// configMaksPhoneRu => [
+// () => ({ match: /(^7|^\+7)/, replace: '+7', space: '' }),
+// () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
+// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+// () => ({ match: /(\d)/, replace: ') $1', space: ') ' }),
+// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+// () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
+// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+// () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
+// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
+// ]
+```
+
+### Create mask
+```javascript
+import createMask from 'string-mask-jedi';
+
+const configMask = [...];
+
+const mask = creatorMask(configMask);
+```
+
 ### Сreate a mask with a handler
 #### `before`
 ```javascript
@@ -78,15 +131,6 @@ const mask = creatorMask(configMask, {
     cursor,
   }),
 });
-```
-
-### Create mask
-```javascript
-import createMask from 'string-mask-jedi';
-
-const configMask = [...];
-
-const mask = creatorMask(configMask);
 ```
 
 ### Create combine mask
@@ -331,7 +375,7 @@ class MaskTextField extends Component {
 
   onFocus = () => this.focus = true
 
-  onBlur = () => this.focur = false
+  onBlur = () => this.focus = false
 
   render = () => (
     <input
