@@ -1,5 +1,5 @@
-function combine(...args) {
-  const masks = [...args];
+function combine() {
+  const masks = Array.prototype.slice.call(arguments);
 
   return (params) => {
     let result = null;

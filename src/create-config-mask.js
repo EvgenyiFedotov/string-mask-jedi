@@ -1,3 +1,5 @@
+const common = require('./common');
+
 const defaultConfig = {
   space: null,
   translation: {
@@ -6,14 +8,16 @@ const defaultConfig = {
 };
 
 function createConfigMask(mask = '', addConfig = {}) {
-  const config = {
-    ...defaultConfig,
-    ...addConfig,
-    translation: {
-      ...defaultConfig.translation,
-      ...addConfig.translation,
+  const config = common.mergeObjects(
+    defaultConfig,
+    addConfig,
+    {
+      translation: common.mergeObjects(
+        defaultConfig.translation,
+        addConfig.translation,
+      ),
     },
-  };
+  );
   const result = [];
   const maskSplit = mask.split('');
   const maskLength = maskSplit.length - 1;

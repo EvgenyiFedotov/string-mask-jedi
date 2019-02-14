@@ -4,6 +4,7 @@ const combine = require('./combine');
 const masks = require('./masks');
 const repeatMaskElement = require('./repeat-mask-element');
 const createConfigMask = require('./create-config-mask');
+const common = require('./common');
 
 /**
  * @param {Object[]} mask
@@ -19,8 +20,8 @@ function createMask(mask, config = {}) {
   } = config;
   const prev = {
     maskMap: [],
-    result: { ...defaultResult },
-    params: { ...defaultParams },
+    result: common.cloneObject(defaultResult),
+    params: common.cloneObject(defaultParams),
   };
 
   return (params) => {
