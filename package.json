@@ -1,12 +1,19 @@
 {
   "name": "string-mask-jedi",
   "version": "2.1.1",
-  "description": "",
-  "main": "src/index.js",
+  "description": "Create string mask",
+  "main": "./dist",
+  "typings": "./typings",
   "scripts": {
+    "clean": "rm -fr dist typings",
     "test": "jest",
-    "test-watch": "jest --watch",
-    "test-watch-verbose": "jest --watch --verbose"
+    "minify": "minify dist/index.js --out-file dist/index.js",
+    "postbuild": "yarn minify",
+    "build": "tsc -p tsconfig.build.json",
+    "rebuild": "yarn clean && yarn build",
+    "link:pack": "sh ./scripts/link-pack.sh",
+    "unlink:pack": "sh ./scripts/unlink-pack.sh",
+    "prepack": "yarn rebuild"
   },
   "repository": {
     "type": "git",
@@ -25,6 +32,19 @@
   },
   "homepage": "https://github.com/EvgenyiFedotov/string-mask-jedi#readme",
   "devDependencies": {
-    "jest": "^23.6.0"
+    "@babel/plugin-proposal-export-default-from": "^7.7.4",
+    "@babel/preset-env": "^7.7.6",
+    "@babel/preset-react": "^7.7.4",
+    "@babel/preset-typescript": "^7.7.4",
+    "@types/jest": "^24.0.23",
+    "babel-minify": "^0.5.1",
+    "babel-plugin-add-module-exports": "^1.0.2",
+    "eslint": "^6.7.1",
+    "eslint-plugin-prettier": "^3.1.1",
+    "jest": "^24.9.0",
+    "ts-jest": "^24.2.0",
+    "tslint": "^5.20.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.7.2"
   }
 }

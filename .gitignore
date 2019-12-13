@@ -1,5 +1,7 @@
 node_modules
-package-lock.json
-npm-debug.log
-src-old
-spec-old
+dist
+typings
+yarn-error.log
+.DS_Store
+storybook-static
+*-old
