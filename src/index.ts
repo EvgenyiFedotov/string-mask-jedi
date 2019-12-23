@@ -23,6 +23,36 @@ interface UseMatchOptions {
   additional?: boolean;
 }
 
+const setCursorToValue = (value: string, cursor: number): string => {
+  const before = value.slice(0, cursor);
+  const after = value.slice(cursor);
+
+  return `${before}#cursor#${after}`;
+};
+
+const filterCursor = (value: string): string => {
+  return value.replace(/^#cursor#/, "");
+};
+
+const removeAddititonalInEnd = (state: State): State => {
+  if (state.nextValue.length) {
+    const nextState = { ...state };
+    let lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
+
+    while (lastNextValueEl && lastNextValueEl.additional) {
+      if (nextState.nextCursor === nextState.nextValue.length) {
+        nextState.nextCursor -= 1;
+      }
+      nextState.nextValue.splice(-1);
+      lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
+    }
+
+    return nextState;
+  }
+
+  return state;
+};
+
 export const createMask = (...config: ConfigElement[]) => {
   let currState: State = {
     value: "",
@@ -114,34 +144,4 @@ export const useMatch = (
   }
 
   return currState;
-};
-
-const setCursorToValue = (value: string, cursor: number): string => {
-  const before = value.slice(0, cursor);
-  const after = value.slice(cursor);
-
-  return `${before}#cursor#${after}`;
-};
-
-const filterCursor = (value: string): string => {
-  return value.replace(/^#cursor#/, "");
-};
-
-const removeAddititonalInEnd = (state: State): State => {
-  if (state.nextValue.length) {
-    const nextState = { ...state };
-    let lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
-
-    while (lastNextValueEl && lastNextValueEl.additional) {
-      if (nextState.nextCursor === nextState.nextValue.length) {
-        nextState.nextCursor -= 1;
-      }
-      nextState.nextValue.splice(-1);
-      lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
-    }
-
-    return nextState;
-  }
-
-  return state;
 };
