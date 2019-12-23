@@ -9,8 +9,10 @@
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "jsx": "preserve",
-    "types": ["jest"]
+    "types": ["jest"],
+    "strictNullChecks": true
   },
+  "include": ["src/index.ts"],
   "exclude": [
     "./typings",
     "types",
