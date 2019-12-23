@@ -1,108 +1,143 @@
+interface StateValue {
+  value: string;
+  additional?: boolean;
+}
+
 interface State {
   value: string;
   currValue: string;
-  nextValue: string[];
+  nextValue: StateValue[];
   cursor: number;
   nextCursor: number;
 }
 
-type ConfigElement = (
-  state: State,
-  prevState: State,
-  index: number,
-) => State | void;
-
-interface UseMatchOptions {
-  replace?: string;
-  defaultValue?: string;
-  additional?: true;
+interface ConfigElementParams {
+  currState: State;
+  index: number;
 }
 
-const createEmptyValue = (config: ConfigElement[]) => config.map(() => "");
+type ConfigElement = (params: ConfigElementParams) => State | void;
+
+interface UseMatchOptions {
+  defaultValue?: string;
+  additional?: boolean;
+}
 
 export const createMask = (...config: ConfigElement[]) => {
   let currState: State = {
     value: "",
     cursor: 0,
     currValue: "",
-    nextValue: createEmptyValue(config),
+    nextValue: [],
     nextCursor: 0,
   };
-  let prevState: State = { ...currState };
 
   return (value: string, cursor: number = 0) => {
     currState = {
       value,
       cursor,
-      currValue: value,
-      nextValue: createEmptyValue(config),
+      currValue: setCursorToValue(value, cursor),
+      nextValue: [],
       nextCursor: 0,
     };
 
     for (let index = 0; index < config.length; index += 1) {
-      const nextState = config[index](currState, prevState, index);
+      const nextState = config[index]({ currState, index });
 
       if (!nextState || nextState === currState) break;
       currState = nextState;
     }
 
-    prevState = { ...currState };
+    if (
+      !!currState.currValue.match(/^#cursor#/) ||
+      !!currState.currValue.match(/#cursor#$/)
+    ) {
+      currState.nextCursor = currState.nextValue.length;
+    }
 
-    return { ...currState, nextValue: currState.nextValue.join("") };
+    currState = removeAddititonalInEnd(currState);
+
+    return {
+      ...currState,
+      nextValue: currState.nextValue
+        .map((valueElement) => valueElement.value)
+        .join(""),
+    };
   };
 };
 
 export const useMatch = (
-  getMatch: (state: State, prevState: State) => RegExp,
+  getMatch: (state: State) => RegExp,
   options: UseMatchOptions = {},
-): ConfigElement => (state, prevState, index) => {
-  const { replace = "", defaultValue, additional } = options;
-  const match = getMatch(state, prevState);
-  const matchResult = state.currValue.match(match);
+): ConfigElement => ({ currState, index }) => {
+  const { defaultValue, additional = false } = options;
+  const match = getMatch(currState);
+  const matchResult = currState.currValue.match(match);
 
   if (matchResult) {
-    const nextState = { ...state };
+    const nextState = { ...currState };
 
-    nextState.currValue = nextState.currValue.replace(match, replace);
+    if (!!currState.currValue.match(/^#cursor#/)) {
+      nextState.nextCursor = index;
+      nextState.currValue = nextState.currValue.replace(/^#cursor#/, "");
+    }
+
+    nextState.currValue = nextState.currValue.replace(match, "");
 
     if (additional) {
-      if (nextState.currValue) {
-        nextState.nextValue[index] = matchResult[0];
-
-        if (state.cursor - 1 === index) {
-          nextState.nextCursor = state.cursor + 1;
-        } else if (state.cursor > index) {
-          nextState.nextCursor = state.cursor;
-          nextState.cursor += 1; // TODO use another name
-        }
-      } else {
-        if (state.cursor - 1 === index) {
-          nextState.nextCursor = state.cursor - 1;
-        }
+      if (filterCursor(nextState.currValue)) {
+        nextState.nextValue[index] = { value: "", additional };
+        nextState.nextValue[index].value = matchResult[0];
       }
     } else {
-      nextState.nextValue[index] = matchResult[0];
-
-      if (state.cursor - 1 === index) {
-        nextState.nextCursor = state.cursor;
-      }
+      nextState.nextValue[index] = { value: "", additional };
+      nextState.nextValue[index].value = matchResult[0];
     }
 
     return nextState;
   } else if (defaultValue) {
-    const nextState = { ...state };
+    const nextState = { ...currState };
+
+    if (!!currState.currValue.match(/^#cursor#/)) {
+      nextState.nextCursor = index;
+      nextState.currValue = nextState.currValue.replace(/^#cursor#/, "");
+    }
 
     if (additional) {
-      if (nextState.currValue) {
-        nextState.nextValue[index] = defaultValue;
-
-        if (state.cursor - 1 === index) {
-          nextState.nextCursor = state.cursor + 1;
-        } else if (state.cursor > index) {
-          nextState.nextCursor = state.cursor + 1;
-          nextState.cursor += 1; // TODO use another name
-        }
+      if (filterCursor(nextState.currValue)) {
+        nextState.nextValue[index] = { value: "", additional };
+        nextState.nextValue[index].value = defaultValue;
       }
+    }
+
+    return nextState;
+  }
+
+  return currState;
+};
+
+const setCursorToValue = (value: string, cursor: number): string => {
+  const before = value.slice(0, cursor);
+  const after = value.slice(cursor);
+
+  return `${before}#cursor#${after}`;
+};
+
+const filterCursor = (value: string): string => {
+  return value.replace(/^#cursor#/, "");
+};
+
+const removeAddititonalInEnd = (state: State): State => {
+  if (state.nextValue.length) {
+    const nextState = { ...state };
+    let lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
+
+    while (lastNextValueEl && lastNextValueEl.additional) {
+      if (nextState.nextCursor === nextState.nextValue.length) {
+        nextState.nextCursor -= 1;
+      }
+      nextState.nextValue.splice(-1);
+      lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
     }
 
     return nextState;
