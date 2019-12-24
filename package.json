@@ -7,8 +7,8 @@
   "scripts": {
     "clean": "rm -fr dist typings",
     "test": "jest",
-    "minify": "minify dist/index.js --out-file dist/index.js",
-    "postbuild": "yarn minify",
+    "uglifyjs": "uglifyjs ./dist/index.js --mangle-props keep_quoted -c toplevel,sequences=false -o ./dist/index.js",
+    "postbuild": "yarn uglifyjs",
     "build": "tsc -p tsconfig.build.json",
     "rebuild": "yarn clean && yarn build",
     "link:pack": "sh ./scripts/link-pack.sh",
@@ -37,7 +37,6 @@
     "@babel/preset-react": "^7.7.4",
     "@babel/preset-typescript": "^7.7.4",
     "@types/jest": "^24.0.23",
-    "babel-minify": "^0.5.1",
     "babel-plugin-add-module-exports": "^1.0.2",
     "eslint": "^6.7.1",
     "eslint-plugin-prettier": "^3.1.1",
@@ -45,6 +44,7 @@
     "ts-jest": "^24.2.0",
     "tslint": "^5.20.1",
     "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.2",
+    "uglify-js": "^3.7.2"
   }
 }
