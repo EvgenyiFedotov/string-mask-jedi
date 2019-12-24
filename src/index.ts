@@ -30,8 +30,8 @@ interface Translations {
 }
 
 interface MaskResult {
-  nextValue: string;
-  nextCursor: number;
+  value: string;
+  cursor: number;
 }
 
 export type Mask = (value: string, cursor?: number) => MaskResult;
@@ -108,8 +108,8 @@ export const createMask = (config: ConfigElement[]): Mask => {
     currState = removeAddititonalElementsInEnd(currState);
 
     return {
-      nextCursor: currState.nextCursor,
-      nextValue: currState.nextValue
+      cursor: currState.nextCursor,
+      value: currState.nextValue
         .map((valueElement) => valueElement.value)
         .join(""),
     };
