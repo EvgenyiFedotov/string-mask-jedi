@@ -36,6 +36,18 @@ const time2 = createMask(
   }),
 );
 
+const time3 = createMask(
+  createConfig("H:M", {
+    H: [
+      useMatch(() => /[012]/),
+      useMatch(({ state: { valueElements: [h1] } }) =>
+        h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
+      ),
+    ],
+    M: [useMatch(() => /([012345])/), useMatch(() => /\d/)],
+  }),
+);
+
 // Tests phone
 test.each(phoneSets.withoutCursor(phone))("without cursor %#", checkValue);
 
@@ -103,6 +115,27 @@ describe("with cursor", () => {
     );
 
     test.each(timeSets.withCursor.setInBetween.byManyNumber(time2))(
+      "by many number %#",
+      checkValueCursor,
+    );
+  });
+});
+
+test.each(timeSets.withoutCursor(time3))("without cursor", checkValue);
+
+describe("with cursor", () => {
+  test.each(timeSets.withCursor.stepByStep(time3))(
+    "step by step %#",
+    checkValueCursor,
+  );
+
+  describe("set in between", () => {
+    test.each(timeSets.withCursor.setInBetween.bySingleNumber(time3))(
+      "by single number %#",
+      checkValueCursor,
+    );
+
+    test.each(timeSets.withCursor.setInBetween.byManyNumber(time3))(
       "by many number %#",
       checkValueCursor,
     );
