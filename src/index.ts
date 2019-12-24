@@ -23,6 +23,16 @@ interface UseMatchOptions {
   additional?: boolean;
 }
 
+interface Translations {
+  [name: string]: {
+    getMatch: (state: State, index: number) => RegExp;
+    defaultValue?: string;
+    additional?: boolean;
+  };
+}
+
+export type Mask = (value: string, cursor?: number) => ReturnState;
+
 const setCursorToValue = (value: string, cursor: number): string => {
   const before = value.slice(0, cursor);
   const after = value.slice(cursor);
@@ -53,7 +63,12 @@ const removeAddititonalInEnd = (state: State): State => {
   return state;
 };
 
-export const createMask = (...config: ConfigElement[]) => {
+interface ReturnState {
+  nextValue: string;
+  nextCursor: number;
+}
+
+export const createMask = (config: ConfigElement[]): Mask => {
   let currState: State = {
     value: "",
     cursor: 0,
@@ -62,7 +77,7 @@ export const createMask = (...config: ConfigElement[]) => {
     nextCursor: 0,
   };
 
-  return (value: string, cursor: number = 0) => {
+  return (value: string, cursor: number = 0): ReturnState => {
     currState = {
       value,
       cursor,
@@ -88,7 +103,7 @@ export const createMask = (...config: ConfigElement[]) => {
     currState = removeAddititonalInEnd(currState);
 
     return {
-      ...currState,
+      nextCursor: currState.nextCursor,
       nextValue: currState.nextValue
         .map((valueElement) => valueElement.value)
         .join(""),
@@ -97,11 +112,11 @@ export const createMask = (...config: ConfigElement[]) => {
 };
 
 export const useMatch = (
-  getMatch: (state: State) => RegExp,
+  getMatch: (state: State, index: number) => RegExp,
   options: UseMatchOptions = {},
 ): ConfigElement => ({ currState, index }) => {
   const { defaultValue, additional = false } = options;
-  const match = getMatch(currState);
+  const match = getMatch(currState, index);
   const matchResult = currState.currValue.match(match);
 
   if (matchResult) {
@@ -144,4 +159,35 @@ export const useMatch = (
   }
 
   return currState;
+};
+
+export const createConfig = (
+  value: string,
+  translations: Translations = {},
+): ConfigElement[] => {
+  const config: ConfigElement[] = [];
+  const arrValue = value.split("");
+
+  for (let index = 0; index < arrValue.length; index += 1) {
+    const element = arrValue[index];
+    const translationsElement = translations[element];
+
+    if (translationsElement) {
+      config.push(
+        useMatch(translationsElement.getMatch, {
+          defaultValue: translationsElement.defaultValue,
+          additional: translationsElement.additional,
+        }),
+      );
+    } else {
+      config.push(
+        useMatch(
+          () => new RegExp(element.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+          { defaultValue: element, additional: true },
+        ),
+      );
+    }
+  }
+
+  return config;
 };
