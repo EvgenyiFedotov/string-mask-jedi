@@ -1,57 +1,38 @@
-import { createConfig, createMask } from "../../src";
+import { createConfig, createMask, useMatch } from "../../src";
 import * as phoneSets from "../phone/sets";
 import * as timeSets from "../time/sets";
 import { checkValue, checkValueCursor } from "../common";
 
 const phone = createMask(
   createConfig("+0 (ddd) ddd-dd-dd", {
-    d: { getMatch: () => /\d/ },
+    d: useMatch(() => /\d/),
   }),
 );
 
 const phoneStrict = createMask(
-  createConfig("+0 (ddd) ddd-dd-dd", {
-    d: { getMatch: () => /\d/ },
-    "0": { getMatch: () => /^0/, additional: true, defaultValue: "0" },
+  createConfig("+Z (ddd) ddd-dd-dd", {
+    d: useMatch(() => /\d/),
+    Z: useMatch(() => /^0/, { additional: true, defaultValue: "0" }),
   }),
 );
 
 const time1 = createMask(
   createConfig("Hh:Mm", {
-    H: { getMatch: () => /[012]/ },
-    h: {
-      getMatch: ({ valueElements: [h1Value] }) => {
-        return h1Value.value.match(/([01])/) ? /(\d)/ : /([0123])/;
-      },
-    },
-    M: { getMatch: () => /([012345])/ },
-    m: { getMatch: () => /\d/ },
+    H: useMatch(() => /[012]/),
+    h: useMatch(({ state: { valueElements: [h1] } }) =>
+      h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
+    ),
+    M: useMatch(() => /([012345])/),
+    m: useMatch(() => /\d/),
   }),
 );
 
 const time2 = createMask(
   createConfig("HH:MM", {
-    H: {
-      getMatch: (state, index) => {
-        const { valueElements: nextValue } = state;
-        const [h1Value] = nextValue;
-
-        if (index === 0) {
-          return /[012]/;
-        }
-
-        return h1Value.value.match(/([01])/) ? /(\d)/ : /([0123])/;
-      },
-    },
-    M: {
-      getMatch: (state, index) => {
-        if (index === 3) {
-          return /([012345])/;
-        }
-
-        return /\d/;
-      },
-    },
+    H: useMatch(({ state: { valueElements: [h1] }, index }) =>
+      index === 0 ? /[012]/ : h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
+    ),
+    M: useMatch(({ index }) => (index === 3 ? /([012345])/ : /\d/)),
   }),
 );
 

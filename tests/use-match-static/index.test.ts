@@ -4,7 +4,7 @@ import { checkValue, checkValueCursor } from "../common";
 
 const time = createMask([
   useMatch(() => /[012]/),
-  useMatch(({ valueElements: [h1] }) =>
+  useMatch(({ state: { valueElements: [h1] } }) =>
     h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
   ),
   useMatchStatic(":"),
