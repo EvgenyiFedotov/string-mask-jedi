@@ -73,7 +73,7 @@ const removeAddititonalElementsInEnd = (maskResult: MaskResult): MaskResult => {
   return maskResult;
 };
 
-const removeCursor = (state: State, index: number): State => {
+const setCursor = (state: State, index: number): State => {
   const nextState = { ...state };
 
   if (!!nextState.remainder.match(/^#cursor#/)) {
@@ -92,6 +92,31 @@ const buildState = (value: string, cursor: number = 0): State => {
   };
 };
 
+const removeCursor = (state: State): State => {
+  const nextState = { ...state };
+
+  if (
+    !!nextState.remainder.match(/^#cursor#/) ||
+    !!nextState.remainder.match(/#cursor#$/)
+  ) {
+    nextState.cursor = nextState.valueElements.length;
+    nextState.remainder = nextState.remainder.replace(/^#cursor#/, "");
+    nextState.remainder = nextState.remainder.replace(/#cursor#$/, "");
+  }
+
+  return nextState;
+};
+
+const buildMaskResult = (state: State, config: ConfigElement[]): MaskResult => {
+  return {
+    value: buildValue(state.valueElements),
+    valueElements: state.valueElements,
+    cursor: state.cursor,
+    remainder: state.remainder,
+    completed: state.valueElements.length === config.length,
+  };
+};
+
 export const createMask = (config: ConfigElement[]): Mask => {
   let currState: State = buildState("");
 
@@ -105,22 +130,9 @@ export const createMask = (config: ConfigElement[]): Mask => {
       currState = nextState;
     }
 
-    if (
-      !!currState.remainder.match(/^#cursor#/) ||
-      !!currState.remainder.match(/#cursor#$/)
-    ) {
-      currState.cursor = currState.valueElements.length;
-      currState.remainder = currState.remainder.replace(/^#cursor#/, "");
-      currState.remainder = currState.remainder.replace(/#cursor#$/, "");
-    }
+    currState = removeCursor(currState);
 
-    let result = {
-      value: buildValue(currState.valueElements),
-      valueElements: currState.valueElements,
-      cursor: currState.cursor,
-      remainder: currState.remainder,
-      completed: currState.valueElements.length === config.length,
-    };
+    let result = buildMaskResult(currState, config);
 
     if (currState.valueElements.length < config.length) {
       result = removeAddititonalElementsInEnd(result);
@@ -139,7 +151,7 @@ export const useMatch = (
   const matchResult = currState.remainder.match(match);
 
   if (matchResult) {
-    const nextState = removeCursor(currState, index);
+    const nextState = setCursor(currState, index);
 
     nextState.remainder = nextState.remainder.replace(match, "");
 
@@ -153,7 +165,7 @@ export const useMatch = (
 
     return nextState;
   } else if (defaultValue) {
-    const nextState = removeCursor(currState, index);
+    const nextState = setCursor(currState, index);
 
     if (additional) {
       if (filterCursor(nextState.remainder)) {
