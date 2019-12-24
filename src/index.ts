@@ -4,10 +4,8 @@ interface StateValue {
 }
 
 interface State {
-  value: string;
   currValue: string;
   nextValue: StateValue[];
-  cursor: number;
   nextCursor: number;
 }
 
@@ -31,9 +29,14 @@ interface Translations {
   };
 }
 
-export type Mask = (value: string, cursor?: number) => ReturnState;
+interface MaskResult {
+  nextValue: string;
+  nextCursor: number;
+}
 
-const setCursorToValue = (value: string, cursor: number): string => {
+export type Mask = (value: string, cursor?: number) => MaskResult;
+
+const addCursorToValue = (value: string, cursor: number): string => {
   const before = value.slice(0, cursor);
   const after = value.slice(cursor);
 
@@ -44,7 +47,7 @@ const filterCursor = (value: string): string => {
   return value.replace(/^#cursor#/, "");
 };
 
-const removeAddititonalInEnd = (state: State): State => {
+const removeAddititonalElementsInEnd = (state: State): State => {
   if (state.nextValue.length) {
     const nextState = { ...state };
     let lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
@@ -63,28 +66,30 @@ const removeAddititonalInEnd = (state: State): State => {
   return state;
 };
 
-interface ReturnState {
-  nextValue: string;
-  nextCursor: number;
-}
+const removeCursor = (state: State, index: number): State => {
+  const nextState = { ...state };
 
-export const createMask = (config: ConfigElement[]): Mask => {
-  let currState: State = {
-    value: "",
-    cursor: 0,
-    currValue: "",
+  if (!!nextState.currValue.match(/^#cursor#/)) {
+    nextState.nextCursor = index;
+    nextState.currValue = nextState.currValue.replace(/^#cursor#/, "");
+  }
+
+  return nextState;
+};
+
+const buildState = (value: string, cursor: number = 0): State => {
+  return {
+    currValue: addCursorToValue(value, cursor),
     nextValue: [],
     nextCursor: 0,
   };
+};
 
-  return (value: string, cursor: number = 0): ReturnState => {
-    currState = {
-      value,
-      cursor,
-      currValue: setCursorToValue(value, cursor),
-      nextValue: [],
-      nextCursor: 0,
-    };
+export const createMask = (config: ConfigElement[]): Mask => {
+  let currState: State = buildState("");
+
+  return (value: string, cursor: number = 0): MaskResult => {
+    currState = buildState(value, cursor);
 
     for (let index = 0; index < config.length; index += 1) {
       const nextState = config[index]({ currState, index });
@@ -100,7 +105,7 @@ export const createMask = (config: ConfigElement[]): Mask => {
       currState.nextCursor = currState.nextValue.length;
     }
 
-    currState = removeAddititonalInEnd(currState);
+    currState = removeAddititonalElementsInEnd(currState);
 
     return {
       nextCursor: currState.nextCursor,
@@ -120,38 +125,25 @@ export const useMatch = (
   const matchResult = currState.currValue.match(match);
 
   if (matchResult) {
-    const nextState = { ...currState };
-
-    if (!!currState.currValue.match(/^#cursor#/)) {
-      nextState.nextCursor = index;
-      nextState.currValue = nextState.currValue.replace(/^#cursor#/, "");
-    }
+    const nextState = removeCursor(currState, index);
 
     nextState.currValue = nextState.currValue.replace(match, "");
 
     if (additional) {
       if (filterCursor(nextState.currValue)) {
-        nextState.nextValue[index] = { value: "", additional };
-        nextState.nextValue[index].value = matchResult[0];
+        nextState.nextValue[index] = { value: matchResult[0], additional };
       }
     } else {
-      nextState.nextValue[index] = { value: "", additional };
-      nextState.nextValue[index].value = matchResult[0];
+      nextState.nextValue[index] = { value: matchResult[0], additional };
     }
 
     return nextState;
   } else if (defaultValue) {
-    const nextState = { ...currState };
-
-    if (!!currState.currValue.match(/^#cursor#/)) {
-      nextState.nextCursor = index;
-      nextState.currValue = nextState.currValue.replace(/^#cursor#/, "");
-    }
+    const nextState = removeCursor(currState, index);
 
     if (additional) {
       if (filterCursor(nextState.currValue)) {
-        nextState.nextValue[index] = { value: "", additional };
-        nextState.nextValue[index].value = defaultValue;
+        nextState.nextValue[index] = { value: defaultValue, additional };
       }
     }
 
