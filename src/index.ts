@@ -21,12 +21,10 @@ interface UseMatchOptions {
   additional?: boolean;
 }
 
+type GetMatch = (params: { state: State; index: number }) => RegExp;
+
 interface Translations {
-  [name: string]: {
-    getMatch: (state: State, index: number) => RegExp;
-    defaultValue?: string;
-    additional?: boolean;
-  };
+  [name: string]: ConfigElement;
 }
 
 export interface MaskResult {
@@ -133,11 +131,11 @@ export const createMask = (config: ConfigElement[]): Mask => {
 };
 
 export const useMatch = (
-  getMatch: (state: State, index: number) => RegExp,
+  getMatch: GetMatch,
   options: UseMatchOptions = {},
 ): ConfigElement => ({ currState, index }): State => {
   const { defaultValue, additional = false } = options;
-  const match = getMatch(currState, index);
+  const match = getMatch({ state: currState, index });
   const matchResult = currState.remainder.match(match);
 
   if (matchResult) {
@@ -188,12 +186,7 @@ export const createConfig = (
     const translationsElement = translations[element];
 
     if (translationsElement) {
-      config.push(
-        useMatch(translationsElement.getMatch, {
-          defaultValue: translationsElement.defaultValue,
-          additional: translationsElement.additional,
-        }),
-      );
+      config.push(translationsElement);
     } else {
       config.push(useMatchStatic(element));
     }
