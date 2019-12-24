@@ -1,12 +1,12 @@
-interface StateValue {
+interface ValueElement {
   value: string;
   additional?: boolean;
 }
 
 interface State {
-  currValue: string;
-  nextValue: StateValue[];
-  nextCursor: number;
+  remainder: string;
+  valueElements: ValueElement[];
+  cursor: number;
 }
 
 interface ConfigElementParams {
@@ -29,9 +29,12 @@ interface Translations {
   };
 }
 
-interface MaskResult {
+export interface MaskResult {
   value: string;
+  valueElements: ValueElement[];
   cursor: number;
+  remainder: string;
+  completed: boolean;
 }
 
 export type Mask = (value: string, cursor?: number) => MaskResult;
@@ -47,31 +50,37 @@ const filterCursor = (value: string): string => {
   return value.replace(/^#cursor#/, "");
 };
 
-const removeAddititonalElementsInEnd = (state: State): State => {
-  if (state.nextValue.length) {
-    const nextState = { ...state };
-    let lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
+const buildValue = (valueElements: ValueElement[]): string => {
+  return valueElements.map((valueElement) => valueElement.value).join("");
+};
+
+const removeAddititonalElementsInEnd = (maskResult: MaskResult): MaskResult => {
+  if (maskResult.valueElements.length) {
+    const nextState = { ...maskResult };
+    let lastNextValueEl =
+      nextState.valueElements[nextState.valueElements.length - 1];
 
     while (lastNextValueEl && lastNextValueEl.additional) {
-      if (nextState.nextCursor === nextState.nextValue.length) {
-        nextState.nextCursor -= 1;
+      if (nextState.cursor === nextState.valueElements.length) {
+        nextState.cursor -= 1;
       }
-      nextState.nextValue.splice(-1);
-      lastNextValueEl = nextState.nextValue[nextState.nextValue.length - 1];
+      nextState.valueElements.splice(-1);
+      lastNextValueEl =
+        nextState.valueElements[nextState.valueElements.length - 1];
     }
 
-    return nextState;
+    return { ...nextState, value: buildValue(nextState.valueElements) };
   }
 
-  return state;
+  return maskResult;
 };
 
 const removeCursor = (state: State, index: number): State => {
   const nextState = { ...state };
 
-  if (!!nextState.currValue.match(/^#cursor#/)) {
-    nextState.nextCursor = index;
-    nextState.currValue = nextState.currValue.replace(/^#cursor#/, "");
+  if (!!nextState.remainder.match(/^#cursor#/)) {
+    nextState.cursor = index;
+    nextState.remainder = nextState.remainder.replace(/^#cursor#/, "");
   }
 
   return nextState;
@@ -79,9 +88,9 @@ const removeCursor = (state: State, index: number): State => {
 
 const buildState = (value: string, cursor: number = 0): State => {
   return {
-    currValue: addCursorToValue(value, cursor),
-    nextValue: [],
-    nextCursor: 0,
+    remainder: addCursorToValue(value, cursor),
+    valueElements: [],
+    cursor: 0,
   };
 };
 
@@ -99,42 +108,49 @@ export const createMask = (config: ConfigElement[]): Mask => {
     }
 
     if (
-      !!currState.currValue.match(/^#cursor#/) ||
-      !!currState.currValue.match(/#cursor#$/)
+      !!currState.remainder.match(/^#cursor#/) ||
+      !!currState.remainder.match(/#cursor#$/)
     ) {
-      currState.nextCursor = currState.nextValue.length;
+      currState.cursor = currState.valueElements.length;
+      currState.remainder = currState.remainder.replace(/^#cursor#/, "");
+      currState.remainder = currState.remainder.replace(/#cursor#$/, "");
     }
 
-    currState = removeAddititonalElementsInEnd(currState);
-
-    return {
-      cursor: currState.nextCursor,
-      value: currState.nextValue
-        .map((valueElement) => valueElement.value)
-        .join(""),
+    let result = {
+      value: buildValue(currState.valueElements),
+      valueElements: currState.valueElements,
+      cursor: currState.cursor,
+      remainder: currState.remainder,
+      completed: currState.valueElements.length === config.length,
     };
+
+    if (currState.valueElements.length < config.length) {
+      result = removeAddititonalElementsInEnd(result);
+    }
+
+    return result;
   };
 };
 
 export const useMatch = (
   getMatch: (state: State, index: number) => RegExp,
   options: UseMatchOptions = {},
-): ConfigElement => ({ currState, index }) => {
+): ConfigElement => ({ currState, index }): State => {
   const { defaultValue, additional = false } = options;
   const match = getMatch(currState, index);
-  const matchResult = currState.currValue.match(match);
+  const matchResult = currState.remainder.match(match);
 
   if (matchResult) {
     const nextState = removeCursor(currState, index);
 
-    nextState.currValue = nextState.currValue.replace(match, "");
+    nextState.remainder = nextState.remainder.replace(match, "");
 
     if (additional) {
-      if (filterCursor(nextState.currValue)) {
-        nextState.nextValue[index] = { value: matchResult[0], additional };
+      if (filterCursor(nextState.remainder)) {
+        nextState.valueElements[index] = { value: matchResult[0], additional };
       }
     } else {
-      nextState.nextValue[index] = { value: matchResult[0], additional };
+      nextState.valueElements[index] = { value: matchResult[0], additional };
     }
 
     return nextState;
@@ -142,8 +158,8 @@ export const useMatch = (
     const nextState = removeCursor(currState, index);
 
     if (additional) {
-      if (filterCursor(nextState.currValue)) {
-        nextState.nextValue[index] = { value: defaultValue, additional };
+      if (filterCursor(nextState.remainder)) {
+        nextState.valueElements[index] = { value: defaultValue, additional };
       }
     }
 
@@ -151,6 +167,13 @@ export const useMatch = (
   }
 
   return currState;
+};
+
+export const useMatchStatic = (value: string): ConfigElement => {
+  return useMatch(
+    () => new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+    { defaultValue: value, additional: true },
+  );
 };
 
 export const createConfig = (
@@ -172,12 +195,7 @@ export const createConfig = (
         }),
       );
     } else {
-      config.push(
-        useMatch(
-          () => new RegExp(element.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-          { defaultValue: element, additional: true },
-        ),
-      );
+      config.push(useMatchStatic(element));
     }
   }
 
