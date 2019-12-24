@@ -62,9 +62,9 @@ export const tests = (mask: Mask) => {
     [mask("_01112223344"), "+0 (111) 222-33-44"], // See, it is diff (*1)
     [mask("+0 (999) 888-77-66"), "+0 (999) 888-77-66"],
     [mask("2w2ASD!@@#233q34e455e"), "+0 (222) 333-44-55"],
-  ])("without cursor %#", (result, nextValue) => {
+  ])("without cursor %#", (result, value) => {
     if (result instanceof Object) {
-      expect(result.nextValue).toBe(nextValue);
+      expect(result.value).toBe(value);
     }
   });
 };
@@ -77,9 +77,9 @@ export const testsStrict = (mask: Mask) => {
     [mask("_01112223344"), "+0 (011) 122-23-34"], // See, it is diff (*1)
     [mask("+0 (999) 888-77-66"), "+0 (999) 888-77-66"],
     [mask("2w2ASD!@@#233q34e455e"), "+0 (222) 333-44-55"],
-  ])("without cursor %#", (result, nextValue) => {
+  ])("without cursor %#", (result, value) => {
     if (result instanceof Object) {
-      expect(result.nextValue).toBe(nextValue);
+      expect(result.value).toBe(value);
     }
   });
 
@@ -106,10 +106,10 @@ export const testsStrict = (mask: Mask) => {
       [mask("+0 (99", 6), "+0 (99", 6],
       [mask("+0 (9", 5), "+0 (9", 5],
       [mask("+0 (", 4), "", 0],
-    ])("step by step %#", (result, nextValue, nextCursor) => {
+    ])("step by step %#", (result, value, cursor) => {
       if (result instanceof Object) {
-        expect(result.nextValue).toBe(nextValue);
-        expect(result.nextCursor).toBe(nextCursor);
+        expect(result.value).toBe(value);
+        expect(result.cursor).toBe(cursor);
       }
     });
 
@@ -137,10 +137,10 @@ export const testsStrict = (mask: Mask) => {
       [mask("+0 (555) 000-11-922", 17), "+0 (555) 000-11-92", 17],
       [mask("+0 (555) 000-11-292", 18), "+0 (555) 000-11-29", 18],
       [mask("+0 (555) 000-11-229", 19), "+0 (555) 000-11-22", 18],
-    ])("insert into between %#", (result, nextValue, nextCursor) => {
+    ])("insert into between %#", (result, value, cursor) => {
       if (result instanceof Object) {
-        expect(result.nextValue).toBe(nextValue);
-        expect(result.nextCursor).toBe(nextCursor);
+        expect(result.value).toBe(value);
+        expect(result.cursor).toBe(cursor);
       }
     });
   });

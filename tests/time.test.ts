@@ -20,9 +20,9 @@ export const tests = (mask: Mask) => {
     [mask("0555"), "05:55"],
     [mask("555"), ""],
     [mask("12:37"), "12:37"],
-  ])("defaults tests", (result, nextValue) => {
+  ])("defaults tests", (result, value) => {
     if (result instanceof Object) {
-      expect(result.nextValue).toBe(nextValue);
+      expect(result.value).toBe(value);
     }
   });
 
@@ -36,10 +36,10 @@ export const tests = (mask: Mask) => {
       [mask("12:", 3), "12", 2],
       [mask("1", 1), "1", 1],
       [mask("", 0), "", 0],
-    ])("step by step %#", (result, nextValue, nextCursor) => {
+    ])("step by step %#", (result, value, cursor) => {
       if (result instanceof Object) {
-        expect(result.nextValue).toBe(nextValue);
-        expect(result.nextCursor).toBe(nextCursor);
+        expect(result.value).toBe(value);
+        expect(result.cursor).toBe(cursor);
       }
     });
 
@@ -51,10 +51,10 @@ export const tests = (mask: Mask) => {
         [mask("135:2", 3), "13:52", 4],
         [mask("1:52", 1), "15:2", 1],
         [mask("152", 2), "15:2", 2],
-      ])("by single number %#", (result, nextValue, nextCursor) => {
+      ])("by single number %#", (result, value, cursor) => {
         if (result instanceof Object) {
-          expect(result.nextValue).toBe(nextValue);
-          expect(result.nextCursor).toBe(nextCursor);
+          expect(result.value).toBe(value);
+          expect(result.cursor).toBe(cursor);
         }
       });
 
@@ -67,10 +67,10 @@ export const tests = (mask: Mask) => {
         [mask("12:5534", 5), "12:55", 5],
         [mask("1332:34", 3), "13:32", 4],
         [mask("2113:32", 2), "21:13", 2],
-      ])("by many number %#", (result, nextValue, nextCursor) => {
+      ])("by many number %#", (result, value, cursor) => {
         if (result instanceof Object) {
-          expect(result.nextValue).toBe(nextValue);
-          expect(result.nextCursor).toBe(nextCursor);
+          expect(result.value).toBe(value);
+          expect(result.cursor).toBe(cursor);
         }
       });
     });
