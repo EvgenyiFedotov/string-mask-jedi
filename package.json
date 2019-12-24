@@ -25,6 +25,10 @@
     "jedi",
     "react"
   ],
+  "files": [
+    "dist",
+    "typings"
+  ],
   "author": "Evgeniy Fedotov",
   "license": "MIT",
   "bugs": {
