@@ -24,7 +24,7 @@ interface UseMatchOptions {
 type GetMatch = (params: { state: State; index: number }) => RegExp;
 
 interface Translations {
-  [name: string]: ConfigElement;
+  [name: string]: ConfigElement | ConfigElement[];
 }
 
 export interface MaskResult {
@@ -178,15 +178,19 @@ export const createConfig = (
   value: string,
   translations: Translations = {},
 ): ConfigElement[] => {
-  const config: ConfigElement[] = [];
+  let config: ConfigElement[] = [];
   const arrValue = value.split("");
 
   for (let index = 0; index < arrValue.length; index += 1) {
     const element = arrValue[index];
-    const translationsElement = translations[element];
+    const translation = translations[element];
 
-    if (translationsElement) {
-      config.push(translationsElement);
+    if (translation) {
+      if (translation instanceof Array) {
+        config = [...config, ...translation];
+      } else {
+        config.push(translation);
+      }
     } else {
       config.push(useMatchStatic(element));
     }
