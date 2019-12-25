@@ -1,143 +1,95 @@
-import { createConfig, createMask, useMatch } from "../../src";
-import * as phoneSets from "../phone/sets";
-import * as timeSets from "../time/sets";
-import { checkValue, checkValueCursor } from "../common";
+import { createConfig, createMaskByConfig, createMatch } from "../../src";
+import * as sets from "./sets";
 
-const phone = createMask(
+const phone = createMaskByConfig(
   createConfig("+0 (ddd) ddd-dd-dd", {
-    d: useMatch(() => /\d/),
+    d: createMatch(() => /\d/),
   }),
 );
 
-const phoneStrict = createMask(
+const phoneStrict = createMaskByConfig(
   createConfig("+Z (ddd) ddd-dd-dd", {
-    d: useMatch(() => /\d/),
-    Z: useMatch(() => /^0/, { additional: true, defaultValue: "0" }),
+    d: createMatch(() => /\d/),
+    Z: createMatch(() => /^0/, { additional: true, defaultValue: "0" }),
   }),
 );
 
-const time1 = createMask(
+const phone2 = createMaskByConfig(
+  createConfig("+0 (ddd) ddd-dd-dd", {
+    d: /\d/,
+  }),
+);
+
+const time1 = createMaskByConfig(
   createConfig("Hh:Mm", {
-    H: useMatch(() => /[012]/),
-    h: useMatch(({ state: { valueElements: [h1] } }) =>
-      h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
+    H: createMatch(() => /[012]/),
+    h: createMatch(({ state: { valueElements: [h1] } }) =>
+      h1 && h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
     ),
-    M: useMatch(() => /([012345])/),
-    m: useMatch(() => /\d/),
+    M: createMatch(() => /([012345])/),
+    m: createMatch(() => /\d/),
   }),
 );
 
-const time2 = createMask(
+const time2 = createMaskByConfig(
   createConfig("HH:MM", {
-    H: useMatch(({ state: { valueElements: [h1] }, index }) =>
-      index === 0 ? /[012]/ : h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
+    H: createMatch(({ state: { valueElements: [h1] }, index }) =>
+      index === 0
+        ? /[012]/
+        : h1 && h1.value.match(/([01])/)
+        ? /(\d)/
+        : /([0123])/,
     ),
-    M: useMatch(({ index }) => (index === 3 ? /([012345])/ : /\d/)),
+    M: createMatch(({ index }) => (index === 3 ? /([012345])/ : /\d/)),
   }),
 );
 
-const time3 = createMask(
+const time3 = createMaskByConfig(
   createConfig("H:M", {
     H: [
-      useMatch(() => /[012]/),
-      useMatch(({ state: { valueElements: [h1] } }) =>
-        h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
+      createMatch(() => /[012]/),
+      createMatch(({ state: { valueElements: [h1] } }) =>
+        h1 && h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
       ),
     ],
-    M: [useMatch(() => /([012345])/), useMatch(() => /\d/)],
+    M: [createMatch(() => /([012345])/), createMatch(() => /\d/)],
   }),
 );
 
-// Tests phone
-test.each(phoneSets.withoutCursor(phone))("without cursor %#", checkValue);
-
-test.each(phoneSets.withoutCursor(phoneStrict, true))(
-  "without cursor [strict] %#",
-  checkValue,
+const time4 = createMaskByConfig(
+  createConfig("Hh:Mm", {
+    H: /[012]/,
+    h: ({
+      state: {
+        valueElements: [h1],
+      },
+    }) => (h1 && h1.value.match(/([01])/) ? /(\d)/ : /([0123])/),
+    M: /([012345])/,
+    m: /\d/,
+  }),
 );
 
-describe("with cursor", () => {
-  test.each(phoneSets.withCursor.stepByStep(phone))(
-    "step by step %#",
-    checkValueCursor,
-  );
+const time5 = createMaskByConfig(
+  createConfig("H:M", {
+    H: [
+      /[012]/,
+      ({
+        state: {
+          valueElements: [h1],
+        },
+      }) => (h1 && h1.value.match(/([01])/) ? /(\d)/ : /([0123])/),
+    ],
+    M: [createMatch(() => /([012345])/), /\d/],
+  }),
+);
 
-  test.each(phoneSets.withCursor.stepByStep(phoneStrict))(
-    "step by step [strict] %#",
-    checkValueCursor,
-  );
+// Phones
+sets.phone(phone, phoneStrict);
+sets.phone(phone2);
 
-  test.each(phoneSets.withCursor.insertIntoBetween(phone))(
-    "insert into between %#",
-    checkValueCursor,
-  );
-
-  test.each(phoneSets.withCursor.insertIntoBetween(phoneStrict, true))(
-    "insert into between [strict] %#",
-    checkValueCursor,
-  );
-});
-
-// Test time
-test.each(timeSets.withoutCursor(time1))("without cursor", checkValue);
-
-describe("with cursor", () => {
-  test.each(timeSets.withCursor.stepByStep(time1))(
-    "step by step %#",
-    checkValueCursor,
-  );
-
-  describe("set in between", () => {
-    test.each(timeSets.withCursor.setInBetween.bySingleNumber(time1))(
-      "by single number %#",
-      checkValueCursor,
-    );
-
-    test.each(timeSets.withCursor.setInBetween.byManyNumber(time1))(
-      "by many number %#",
-      checkValueCursor,
-    );
-  });
-});
-
-test.each(timeSets.withoutCursor(time2))("without cursor", checkValue);
-
-describe("with cursor", () => {
-  test.each(timeSets.withCursor.stepByStep(time2))(
-    "step by step %#",
-    checkValueCursor,
-  );
-
-  describe("set in between", () => {
-    test.each(timeSets.withCursor.setInBetween.bySingleNumber(time2))(
-      "by single number %#",
-      checkValueCursor,
-    );
-
-    test.each(timeSets.withCursor.setInBetween.byManyNumber(time2))(
-      "by many number %#",
-      checkValueCursor,
-    );
-  });
-});
-
-test.each(timeSets.withoutCursor(time3))("without cursor", checkValue);
-
-describe("with cursor", () => {
-  test.each(timeSets.withCursor.stepByStep(time3))(
-    "step by step %#",
-    checkValueCursor,
-  );
-
-  describe("set in between", () => {
-    test.each(timeSets.withCursor.setInBetween.bySingleNumber(time3))(
-      "by single number %#",
-      checkValueCursor,
-    );
-
-    test.each(timeSets.withCursor.setInBetween.byManyNumber(time3))(
-      "by many number %#",
-      checkValueCursor,
-    );
-  });
-});
+// Times
+sets.time(time1);
+sets.time(time2);
+sets.time(time3);
+sets.time(time4);
+sets.time(time5);

@@ -1,20 +1,23 @@
-import { useMatch, createMask } from "../../src";
+import { createMatch, createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
 
-const d = useMatch(() => /\d/);
-const plus = useMatch(() => /\+/, { defaultValue: "+", additional: true });
-const prenumber = useMatch(() => /0/, { defaultValue: "0", additional: true });
-const prenumberStrict = useMatch(() => /^0/, {
+const d = createMatch(() => /\d/);
+const plus = createMatch(() => /\+/, { defaultValue: "+", additional: true });
+const prenumber = createMatch(() => /0/, {
   defaultValue: "0",
   additional: true,
 });
-const space = useMatch(() => / /, { defaultValue: " ", additional: true });
-const open = useMatch(() => /\(/, { defaultValue: "(", additional: true });
-const close = useMatch(() => /\)/, { defaultValue: ")", additional: true });
-const tr = useMatch(() => /-/, { defaultValue: "-", additional: true });
+const prenumberStrict = createMatch(() => /^0/, {
+  defaultValue: "0",
+  additional: true,
+});
+const space = createMatch(() => / /, { defaultValue: " ", additional: true });
+const open = createMatch(() => /\(/, { defaultValue: "(", additional: true });
+const close = createMatch(() => /\)/, { defaultValue: ")", additional: true });
+const tr = createMatch(() => /-/, { defaultValue: "-", additional: true });
 
-const phone = createMask([
+const phone = createMaskByConfig([
   plus,
   prenumber,
   space,
@@ -35,7 +38,7 @@ const phone = createMask([
   d,
 ]);
 
-const phoneStrict = createMask([
+const phoneStrict = createMaskByConfig([
   plus,
   prenumberStrict,
   space,

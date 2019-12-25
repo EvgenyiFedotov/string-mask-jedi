@@ -1,16 +1,16 @@
-import { useMatch, createMask } from "../../src";
+import { createMatch, createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
 
-const d = useMatch(() => /\d/);
-const s = useMatch(() => /:/, { defaultValue: ":", additional: true });
-const h1 = useMatch(() => /[012]/);
-const h2 = useMatch(({ state: { valueElements: [h1] } }) =>
+const d = createMatch(() => /\d/);
+const s = createMatch(() => /:/, { defaultValue: ":", additional: true });
+const h1 = createMatch(() => /[012]/);
+const h2 = createMatch(({ state: { valueElements: [h1] } }) =>
   h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
 );
-const m1 = useMatch(() => /([012345])/);
+const m1 = createMatch(() => /([012345])/);
 
-const time = createMask([h1, h2, s, m1, d]);
+const time = createMaskByConfig([h1, h2, s, m1, d]);
 
 test.each(sets.withoutCursor(time))("without cursor", checkValue);
 
