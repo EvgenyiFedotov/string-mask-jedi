@@ -1,52 +1,55 @@
 import * as React from "react";
-import { Mask } from "string-mask-jedi";
+import { Mask, MaskResult } from "../../src";
 
-const isHTMLElement = (x: any): x is HTMLElement => {
-  return x.addEventListener instanceof Function;
-};
-
-const isHTMLInputElement = (x: any): x is HTMLInputElement => {
+const isHTMLInput = (x: any): x is HTMLInputElement | HTMLTextAreaElement => {
   return typeof x.value === "string";
 };
 
-const change = (mask: Mask) => {
-  let prevValue: string = "";
+type OnChange = React.ChangeEventHandler<
+  HTMLInputElement | HTMLTextAreaElement
+>;
 
-  return (event: KeyboardEvent) => {
-    event.stopPropagation();
-
-    if (isHTMLInputElement(event.currentTarget)) {
-      const { currentTarget } = event;
-      const { value, selectionStart } = currentTarget;
-
-      if (prevValue !== value) {
-        const maskResult = mask(value, selectionStart);
-
-        currentTarget.value = maskResult.value;
-        currentTarget.selectionStart = maskResult.cursor;
-        currentTarget.selectionEnd = maskResult.cursor;
-
-        prevValue = currentTarget.value;
-      }
-    }
-  };
-};
+interface UseStringMaskResult<T = any> {
+  value: string;
+  onChange: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
+  ref: React.MutableRefObject<T>;
+}
 
 export const useStringMask = <T = HTMLInputElement>(
   mask: Mask,
-): React.MutableRefObject<T> => {
+): UseStringMaskResult<T> => {
   const ref = React.useRef<T>(null);
+
+  const [maskResult, setMaskResult] = React.useState<MaskResult>({
+    value: "",
+    valueElements: [],
+    remainder: "",
+    cursor: 0,
+    completed: false,
+  });
+
+  const value = React.useMemo(() => maskResult.value, [maskResult]);
+
+  const onChange = React.useCallback<OnChange>(
+    (event) => {
+      const { currentTarget } = event;
+      const { value, selectionStart } = currentTarget;
+
+      setMaskResult(mask(value, selectionStart));
+    },
+    [mask],
+  );
 
   React.useEffect(() => {
     const { current } = ref;
 
-    if (isHTMLElement(current)) {
-      const changeMask = change(mask);
-
-      current.addEventListener("keydown", changeMask);
-      current.addEventListener("keyup", changeMask);
+    if (current && isHTMLInput(current)) {
+      current.selectionStart = maskResult.cursor;
+      current.selectionEnd = maskResult.cursor;
     }
-  }, [mask, ref]);
+  }, [maskResult]);
 
-  return ref;
+  return { value, onChange, ref };
 };
