@@ -1,49 +1,49 @@
 import React from "react";
-import { useMatch, createConfig, createMask } from "../src";
+import { createMask } from "../src";
 import { useStringMask } from "./lib";
 
-const time = createMask(
-  createConfig("H:M", {
-    H: [
-      useMatch(() => /[012]/),
-      useMatch(({ state: { valueElements: [h1] } }) =>
-        h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
-      ),
-    ],
-    M: [useMatch(() => /([012345])/), useMatch(() => /\d/)],
-  }),
-);
+const time = createMask("H:M", {
+  H: [
+    /[012]/,
+    ({ state }) => {
+      const [h1] = state.valueElements;
 
-const phone = createMask(
-  createConfig("+0 (ddd) ddd-dd-dd", {
-    d: useMatch(() => /\d/),
-  }),
-);
+      if (h1 && h1.value.match(/([01])/)) {
+        return /(\d)/;
+      }
 
-const date = createMask(
-  createConfig("dd/dd/dddd", {
-    d: useMatch(() => /\d/),
-  }),
-);
+      return /([0123])/;
+    },
+  ],
+  M: [/([012345])/, () => /\d/],
+});
+
+const phone = createMask("+0 (ddd) ddd-dd-dd", {
+  d: /\d/,
+});
+
+const date = createMask("dd/dd/dddd", {
+  d: /\d/,
+});
 
 export default {
   title: "init",
 };
 
 export const Time = () => {
-  const ref = useStringMask(time);
+  const { value, onChange, ref } = useStringMask(time);
 
-  return <input ref={ref} />;
+  return <input value={value} onChange={onChange} ref={ref} />;
 };
 
 export const Phone = () => {
-  const ref = useStringMask(phone);
+  const { value, onChange, ref } = useStringMask(phone);
 
-  return <input ref={ref} />;
+  return <input value={value} onChange={onChange} ref={ref} />;
 };
 
 export const Date = () => {
-  const ref = useStringMask(date);
+  const { value, onChange, ref } = useStringMask(date);
 
-  return <input ref={ref} />;
+  return <input value={value} onChange={onChange} ref={ref} />;
 };
