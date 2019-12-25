@@ -10,22 +10,34 @@ interface State {
 }
 
 interface ConfigElementParams {
-  currState: State;
+  state: State;
   index: number;
 }
 
-type ConfigElement = (params: ConfigElementParams) => State | void;
+type ConfigElement = (params: ConfigElementParams) => State;
 
-interface UseMatchOptions {
+interface CreateMatchOptions {
   defaultValue?: string;
   additional?: boolean;
 }
 
-type GetMatch = (params: { state: State; index: number }) => RegExp;
+type GetMatch = (params: ConfigElementParams) => RegExp;
+
+type SimpleTranslation = RegExp | GetMatch | ConfigElement;
 
 interface Translations {
-  [name: string]: ConfigElement | ConfigElement[];
+  [name: string]: SimpleTranslation | SimpleTranslation[];
 }
+
+const isGetMatch = (x: any): x is GetMatch => {
+  return (
+    x instanceof Function &&
+    x({
+      state: { remainder: "", valueElements: [], cursor: 0 },
+      index: 0,
+    }) instanceof RegExp
+  );
+};
 
 export interface MaskResult {
   value: string;
@@ -117,14 +129,14 @@ const buildMaskResult = (state: State, config: ConfigElement[]): MaskResult => {
   };
 };
 
-export const createMask = (config: ConfigElement[]): Mask => {
+export const createMaskByConfig = (config: ConfigElement[]): Mask => {
   let currState: State = buildState("");
 
   return (value: string, cursor: number = 0): MaskResult => {
     currState = buildState(value, cursor);
 
     for (let index = 0; index < config.length; index += 1) {
-      const nextState = config[index]({ currState, index });
+      const nextState = config[index]({ state: currState, index });
 
       if (!nextState || nextState === currState) break;
       currState = nextState;
@@ -142,16 +154,16 @@ export const createMask = (config: ConfigElement[]): Mask => {
   };
 };
 
-export const useMatch = (
+export const createMatch = (
   getMatch: GetMatch,
-  options: UseMatchOptions = {},
-): ConfigElement => ({ currState, index }): State => {
+  options: CreateMatchOptions = {},
+): ConfigElement => ({ state, index }): State => {
   const { defaultValue, additional = false } = options;
-  const match = getMatch({ state: currState, index });
-  const matchResult = currState.remainder.match(match);
+  const match = getMatch({ state, index });
+  const matchResult = state.remainder.match(match);
 
   if (matchResult) {
-    const nextState = setCursor(currState, index);
+    const nextState = setCursor(state, index);
 
     nextState.remainder = nextState.remainder.replace(match, "");
 
@@ -165,7 +177,7 @@ export const useMatch = (
 
     return nextState;
   } else if (defaultValue) {
-    const nextState = setCursor(currState, index);
+    const nextState = setCursor(state, index);
 
     if (additional) {
       if (filterCursor(nextState.remainder)) {
@@ -176,11 +188,11 @@ export const useMatch = (
     return nextState;
   }
 
-  return currState;
+  return state;
 };
 
-export const useMatchStatic = (value: string): ConfigElement => {
-  return useMatch(
+export const createMatchStatic = (value: string): ConfigElement => {
+  return createMatch(
     () => new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
     { defaultValue: value, additional: true },
   );
@@ -192,6 +204,15 @@ export const createConfig = (
 ): ConfigElement[] => {
   let config: ConfigElement[] = [];
   const arrValue = value.split("");
+  const pushTranslation = (translation: SimpleTranslation) => {
+    if (translation instanceof RegExp) {
+      config.push(createMatch(() => translation));
+    } else if (isGetMatch(translation)) {
+      config.push(createMatch(translation));
+    } else {
+      config.push(translation);
+    }
+  };
 
   for (let index = 0; index < arrValue.length; index += 1) {
     const element = arrValue[index];
@@ -199,14 +220,18 @@ export const createConfig = (
 
     if (translation) {
       if (translation instanceof Array) {
-        config = [...config, ...translation];
+        translation.forEach(pushTranslation);
       } else {
-        config.push(translation);
+        pushTranslation(translation);
       }
     } else {
-      config.push(useMatchStatic(element));
+      config.push(createMatchStatic(element));
     }
   }
 
   return config;
+};
+
+export const createMask = (value: string, translations: Translations = {}) => {
+  return createMaskByConfig(createConfig(value, translations));
 };
