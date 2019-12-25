@@ -130,23 +130,26 @@ const buildMaskResult = (state: State, config: ConfigElement[]): MaskResult => {
 };
 
 export const createMaskByConfig = (config: ConfigElement[]): Mask => {
-  let currState: State = buildState("");
+  let state: State = buildState("");
 
   return (value: string, cursor: number = 0): MaskResult => {
-    currState = buildState(value, cursor);
+    state = buildState(value, cursor);
 
     for (let index = 0; index < config.length; index += 1) {
-      const nextState = config[index]({ state: currState, index });
+      const nextState = config[index]({ state, index });
 
-      if (!nextState || nextState === currState) break;
-      currState = nextState;
+      if (!nextState || nextState === state) {
+        break;
+      }
+
+      state = nextState;
     }
 
-    currState = removeCursor(currState);
+    state = removeCursor(state);
 
-    let result = buildMaskResult(currState, config);
+    let result = buildMaskResult(state, config);
 
-    if (currState.valueElements.length < config.length) {
+    if (state.valueElements.length < config.length) {
       result = removeAddititonalElementsInEnd(result);
     }
 
