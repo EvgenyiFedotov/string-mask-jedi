@@ -13,7 +13,8 @@
     "rebuild": "yarn clean && yarn build",
     "link:pack": "sh ./scripts/link-pack.sh",
     "unlink:pack": "sh ./scripts/unlink-pack.sh",
-    "prepack": "yarn rebuild"
+    "prepack": "yarn rebuild",
+    "storybook": "start-storybook"
   },
   "repository": {
     "type": "git",
@@ -40,14 +41,23 @@
     "@babel/preset-env": "^7.7.6",
     "@babel/preset-react": "^7.7.4",
     "@babel/preset-typescript": "^7.7.4",
+    "@storybook/addon-info": "^5.2.8",
+    "@storybook/addon-storysource": "^5.2.8",
+    "@storybook/react": "^5.2.8",
     "@types/jest": "^24.0.23",
+    "babel-loader": "^8.0.6",
     "babel-plugin-add-module-exports": "^1.0.2",
     "eslint": "^6.7.1",
     "eslint-plugin-prettier": "^3.1.1",
     "jest": "^24.9.0",
+    "react": "^16.12.0",
+    "react-docgen-typescript-loader": "^3.6.0",
+    "react-dom": "^16.12.0",
+    "styled-components": "^4.4.1",
     "ts-jest": "^24.2.0",
     "tslint": "^5.20.1",
     "tslint-config-prettier": "^1.18.0",
+    "tslint-react": "^4.1.0",
     "typescript": "^3.7.2",
     "uglify-js": "^3.7.2"
   }
