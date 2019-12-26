@@ -1,142 +1,37 @@
-interface ValueElement {
-  value: string;
-  additional?: boolean;
-}
-
-interface State {
-  remainder: string;
-  valueElements: ValueElement[];
-  cursor: number;
-}
-
-interface ConfigElementParams {
-  state: State;
-  index: number;
-}
-
-type ConfigElement = (params: ConfigElementParams) => State;
-
-interface CreateMatchOptions {
-  defaultValue?: string;
-  additional?: boolean;
-}
-
-type GetMatch = (params: ConfigElementParams) => RegExp;
-
-type SimpleTranslation = RegExp | GetMatch | ConfigElement;
-
-interface Translations {
-  [name: string]: SimpleTranslation | SimpleTranslation[];
-}
-
-const isGetMatch = (x: any): x is GetMatch => {
-  return (
-    x instanceof Function &&
-    x({
-      state: { remainder: "", valueElements: [], cursor: 0 },
-      index: 0,
-    }) instanceof RegExp
-  );
-};
-
 export interface MaskResult {
   value: string;
-  valueElements: ValueElement[];
   cursor: number;
-  remainder: string;
-  completed: boolean;
 }
 
 export type Mask = (value: string, cursor?: number) => MaskResult;
 
-const addCursorToValue = (value: string, cursor: number): string => {
-  const before = value.slice(0, cursor);
-  const after = value.slice(cursor);
+interface Token {
+  value: string;
+  additional: boolean;
+}
 
-  return `${before}#cursor#${after}`;
-};
+interface State {
+  remainder: string;
+  tokens: Token[];
+  cursor: number;
+}
 
-const filterCursor = (value: string): string => {
-  return value.replace(/^#cursor#/, "");
-};
+type GetMatch = (state: State, index: number) => RegExp;
 
-const buildValue = (valueElements: ValueElement[]): string => {
-  return valueElements.map((valueElement) => valueElement.value).join("");
-};
+interface TokenConfig {
+  getMatch: GetMatch;
+  defaultValue: string;
+  additional: boolean;
+}
 
-const removeAddititonalElementsInEnd = (maskResult: MaskResult): MaskResult => {
-  if (maskResult.valueElements.length) {
-    const nextState = { ...maskResult };
-    let lastNextValueEl =
-      nextState.valueElements[nextState.valueElements.length - 1];
+type CreateMaskByConfig = (config: TokenConfig[]) => Mask;
 
-    while (lastNextValueEl && lastNextValueEl.additional) {
-      if (nextState.cursor === nextState.valueElements.length) {
-        nextState.cursor -= 1;
-      }
-      nextState.valueElements.splice(-1);
-      lastNextValueEl =
-        nextState.valueElements[nextState.valueElements.length - 1];
-    }
-
-    return { ...nextState, value: buildValue(nextState.valueElements) };
-  }
-
-  return maskResult;
-};
-
-const setCursor = (state: State, index: number): State => {
-  const nextState = { ...state };
-
-  if (!!nextState.remainder.match(/^#cursor#/)) {
-    nextState.cursor = index;
-    nextState.remainder = nextState.remainder.replace(/^#cursor#/, "");
-  }
-
-  return nextState;
-};
-
-const buildState = (value: string, cursor: number = 0): State => {
-  return {
-    remainder: addCursorToValue(value, cursor),
-    valueElements: [],
-    cursor: 0,
-  };
-};
-
-const removeCursor = (state: State): State => {
-  const nextState = { ...state };
-
-  if (
-    !!nextState.remainder.match(/^#cursor#/) ||
-    !!nextState.remainder.match(/#cursor#$/)
-  ) {
-    nextState.cursor = nextState.valueElements.length;
-    nextState.remainder = nextState.remainder.replace(/^#cursor#/, "");
-    nextState.remainder = nextState.remainder.replace(/#cursor#$/, "");
-  }
-
-  return nextState;
-};
-
-const buildMaskResult = (state: State, config: ConfigElement[]): MaskResult => {
-  return {
-    value: buildValue(state.valueElements),
-    valueElements: state.valueElements,
-    cursor: state.cursor,
-    remainder: state.remainder,
-    completed: state.valueElements.length === config.length,
-  };
-};
-
-export const createMaskByConfig = (config: ConfigElement[]): Mask => {
-  let state: State = buildState("");
-
-  return (value: string, cursor: number = 0): MaskResult => {
-    state = buildState(value, cursor);
+export const createMaskByConfig: CreateMaskByConfig = (config) => {
+  return (value, cursor = 0) => {
+    let state = buildDefaultState(value, cursor);
 
     for (let index = 0; index < config.length; index += 1) {
-      const nextState = config[index]({ state, index });
+      const nextState = buildNextState({ config: config[index], state, index });
 
       if (!nextState || nextState === state) {
         break;
@@ -145,46 +40,137 @@ export const createMaskByConfig = (config: ConfigElement[]): Mask => {
       state = nextState;
     }
 
-    state = removeCursor(state);
-
-    let result = buildMaskResult(state, config);
-
-    if (state.valueElements.length < config.length) {
-      result = removeAddititonalElementsInEnd(result);
-    }
-
-    return result;
+    return buildMaskResult(state, config);
   };
 };
 
-export const createMatch = (
-  getMatch: GetMatch,
-  options: CreateMatchOptions = {},
-): ConfigElement => ({ state, index }): State => {
-  const { defaultValue, additional = false } = options;
-  const match = getMatch({ state, index });
-  const matchResult = state.remainder.match(match);
+type Translation = string | RegExp | GetMatch | TokenConfig;
 
-  if (matchResult) {
-    const nextState = setCursor(state, index);
+interface Translations {
+  [key: string]: Translation | Translation[];
+}
 
-    nextState.remainder = nextState.remainder.replace(match, "");
+type CreateConfig = (
+  stringMask: string,
+  translations?: Translations,
+) => TokenConfig[];
 
-    if (additional) {
-      if (filterCursor(nextState.remainder)) {
-        nextState.valueElements[index] = { value: matchResult[0], additional };
+type CreateTokenConfig = (
+  translation: Translation,
+  config?: Omit<TokenConfig, "getMatch">,
+) => TokenConfig;
+
+export const createTokenConfig: CreateTokenConfig = (translation, config) => {
+  if (translation instanceof RegExp) {
+    return {
+      getMatch: () => translation,
+      additional: false,
+      defaultValue: "",
+      ...config,
+    };
+  } else if (translation instanceof Function) {
+    return {
+      getMatch: translation,
+      additional: false,
+      defaultValue: "",
+      ...config,
+    };
+  } else if (typeof translation === "string") {
+    const reg = new RegExp(translation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+    return {
+      getMatch: () => reg,
+      defaultValue: translation,
+      additional: true,
+      ...config,
+    };
+  }
+
+  return translation;
+};
+
+export const createConfig: CreateConfig = (value, translations = {}) => {
+  const config: TokenConfig[] = [];
+  const tokens = value.split("");
+
+  const addTranslation = (translation: Translation) => {
+    config.push(createTokenConfig(translation));
+  };
+
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index];
+    const translation = translations[token];
+
+    if (translation) {
+      if (translation instanceof Array) {
+        translation.forEach(addTranslation);
+      } else {
+        addTranslation(translation);
       }
     } else {
-      nextState.valueElements[index] = { value: matchResult[0], additional };
+      addTranslation(token);
     }
+  }
 
-    return nextState;
-  } else if (defaultValue) {
-    const nextState = setCursor(state, index);
+  return config;
+};
 
-    if (additional) {
-      if (filterCursor(nextState.remainder)) {
-        nextState.valueElements[index] = { value: defaultValue, additional };
+type CreateMask = (stringMask: string, translations?: Translations) => Mask;
+
+export const createMask: CreateMask = (stringMask, translations = {}) => {
+  const config = createConfig(stringMask, translations);
+
+  return createMaskByConfig(config);
+};
+
+type BuildDefaultState = (value: string, cursor: number) => State;
+
+const buildDefaultState: BuildDefaultState = (value, cursor) => {
+  return {
+    remainder: `${value.slice(0, cursor)}#cursor#${value.slice(cursor)}`,
+    tokens: [],
+    cursor: 0,
+  };
+};
+
+interface BuildNextStateParams {
+  config: TokenConfig;
+  state: State;
+  index: number;
+}
+
+type BuildNextState = (params: BuildNextStateParams) => State;
+
+const buildNextState: BuildNextState = ({ config, state, index }) => {
+  const { getMatch, defaultValue, additional = false } = config;
+
+  const match = getMatch(state, index);
+  const matchResult = state.remainder.match(match);
+
+  if (defaultValue || matchResult) {
+    let nextState = { ...state };
+
+    const setToken = (value: string) => {
+      nextState.tokens[index] = { value, additional };
+    };
+
+    nextState = setCursorToState(nextState, index);
+
+    if (matchResult) {
+      nextState.remainder = nextState.remainder.replace(match, "");
+
+      if (additional) {
+        if (filterCursor(nextState.remainder)) {
+          setToken(matchResult[0]);
+        }
+      } else {
+        setToken(matchResult[0]);
+      }
+    } else if (defaultValue) {
+      if (additional) {
+        if (filterCursor(nextState.remainder)) {
+          setToken(defaultValue);
+        }
       }
     }
 
@@ -194,47 +180,64 @@ export const createMatch = (
   return state;
 };
 
-export const createMatchStatic = (value: string): ConfigElement => {
-  return createMatch(
-    () => new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
-    { defaultValue: value, additional: true },
-  );
-};
+type BuildMaskResult = (state: State, config: TokenConfig[]) => MaskResult;
 
-export const createConfig = (
-  value: string,
-  translations: Translations = {},
-): ConfigElement[] => {
-  let config: ConfigElement[] = [];
-  const arrValue = value.split("");
-  const pushTranslation = (translation: SimpleTranslation) => {
-    if (translation instanceof RegExp) {
-      config.push(createMatch(() => translation));
-    } else if (isGetMatch(translation)) {
-      config.push(createMatch(translation));
-    } else {
-      config.push(translation);
-    }
-  };
+const buildMaskResult: BuildMaskResult = (state, config) => {
+  const nextState = { ...state };
 
-  for (let index = 0; index < arrValue.length; index += 1) {
-    const element = arrValue[index];
-    const translation = translations[element];
+  // Check cursor, if one exist remove his and set cursor into nextState
+  if (
+    !!nextState.remainder.match(/^#cursor#/) ||
+    !!nextState.remainder.match(/#cursor#$/)
+  ) {
+    nextState.cursor = nextState.tokens.length;
+    nextState.remainder = nextState.remainder.replace(/^#cursor#/, "");
+    nextState.remainder = nextState.remainder.replace(/#cursor#$/, "");
+  }
 
-    if (translation) {
-      if (translation instanceof Array) {
-        translation.forEach(pushTranslation);
-      } else {
-        pushTranslation(translation);
+  // Remove additional tokens if mask didn't complete
+  if (nextState.tokens.length && nextState.tokens.length < config.length) {
+    let lastToken = nextState.tokens[nextState.tokens.length - 1];
+
+    while (lastToken && lastToken.additional) {
+      if (nextState.cursor === nextState.tokens.length) {
+        nextState.cursor -= 1;
       }
-    } else {
-      config.push(createMatchStatic(element));
+
+      nextState.tokens.splice(-1);
+
+      lastToken = nextState.tokens[nextState.tokens.length - 1];
     }
   }
 
-  return config;
+  const value = buildValue(nextState.tokens);
+  const cursor = nextState.cursor;
+
+  return { value, cursor };
 };
 
-export const createMask = (value: string, translations: Translations = {}) => {
-  return createMaskByConfig(createConfig(value, translations));
+type BuildValue = (tokens: Token[]) => string;
+
+const buildValue: BuildValue = (tokens) => {
+  return tokens.map((token) => token.value).join("");
+};
+
+type SetCursorToState = (state: State, index: number) => State;
+
+const setCursorToState: SetCursorToState = (state, index) => {
+  if (!!state.remainder.match(/^#cursor#/)) {
+    return {
+      ...state,
+      cursor: index,
+      remainder: state.remainder.replace(/^#cursor#/, ""),
+    };
+  }
+
+  return state;
+};
+
+type FilterCursor = (value: string) => string;
+
+const filterCursor: FilterCursor = (value) => {
+  return value.replace(/^#cursor#/, "");
 };
