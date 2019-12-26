@@ -1,15 +1,15 @@
-import { createMatch, createMatchStatic, createMaskByConfig } from "../../src";
+import { createTokenConfig, createMaskByConfig } from "../../src";
 import * as timeSets from "../time/sets";
 import { checkValue, checkValueCursor } from "../common";
 
 const time = createMaskByConfig([
-  createMatch(() => /[012]/),
-  createMatch(({ state: { valueElements: [h1] } }) =>
+  createTokenConfig(() => /[012]/),
+  createTokenConfig(({ tokens: [h1] }) =>
     h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
   ),
-  createMatchStatic(":"),
-  createMatch(() => /([012345])/),
-  createMatch(() => /\d/),
+  createTokenConfig(":"),
+  createTokenConfig(() => /([012345])/),
+  createTokenConfig(() => /\d/),
 ]);
 
 test.each(timeSets.withoutCursor(time))("without cursor", checkValue);
