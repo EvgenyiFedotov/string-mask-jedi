@@ -5,12 +5,12 @@ export interface MaskResult {
 
 export type Mask = (value: string, cursor?: number) => MaskResult;
 
-interface Token {
+export interface Token {
   value: string;
   additional: boolean;
 }
 
-interface State {
+export interface State {
   remainder: string;
   tokens: Token[];
   cursor: number;
@@ -22,11 +22,16 @@ interface TokenConfig {
   getMatch: GetMatch;
   defaultValue: string;
   additional: boolean;
+  id: string;
+  subscribeTo: string[];
+  onChange?: (token: Token, listeningTokens: Token[]) => string | void;
 }
 
 type CreateMaskByConfig = (config: TokenConfig[]) => Mask;
 
 export const createMaskByConfig: CreateMaskByConfig = (config) => {
+  const tokensListeners = buildTokensListeners(config);
+
   return (value, cursor = 0) => {
     let state = buildDefaultState(value, cursor);
 
@@ -38,10 +43,47 @@ export const createMaskByConfig: CreateMaskByConfig = (config) => {
       }
 
       state = nextState;
+      state = runTokenListeners(config, tokensListeners, state, index);
     }
 
     return buildMaskResult(state, config);
   };
+};
+
+type RunTokenListeners = (
+  config: TokenConfig[],
+  tokensListeners: TokenListeners[],
+  state: State,
+  index: number,
+) => State;
+
+const runTokenListeners: RunTokenListeners = (
+  config,
+  tokensListeners,
+  state,
+  index,
+) => {
+  const tokenListeners = tokensListeners[index];
+
+  if (tokenListeners) {
+    const nextState = { ...state, tokens: [...state.tokens] };
+
+    tokenListeners.forEach(([tokenListenerIndex, indexTokens]) => {
+      const { onChange = () => {} } = config[tokenListenerIndex];
+      const tokenListener = nextState.tokens[tokenListenerIndex];
+
+      const onChangeResult = onChange(
+        tokenListener,
+        indexTokens.map((index) => state.tokens[index] || null),
+      );
+
+      if (typeof onChangeResult === "string") {
+        tokenListener.value = onChangeResult;
+      }
+    });
+  }
+
+  return state;
 };
 
 type Translation = string | RegExp | GetMatch | TokenConfig;
@@ -57,7 +99,7 @@ type CreateConfig = (
 
 type CreateTokenConfig = (
   translation: Translation,
-  config?: Omit<TokenConfig, "getMatch">,
+  config?: Partial<Omit<TokenConfig, "getMatch">> & Pick<TokenConfig, "id">,
 ) => TokenConfig;
 
 export const createTokenConfig: CreateTokenConfig = (translation, config) => {
@@ -66,6 +108,8 @@ export const createTokenConfig: CreateTokenConfig = (translation, config) => {
       getMatch: () => translation,
       additional: false,
       defaultValue: "",
+      id: config ? config.id : "",
+      subscribeTo: [],
       ...config,
     };
   } else if (translation instanceof Function) {
@@ -73,6 +117,8 @@ export const createTokenConfig: CreateTokenConfig = (translation, config) => {
       getMatch: translation,
       additional: false,
       defaultValue: "",
+      id: config ? config.id : "",
+      subscribeTo: [],
       ...config,
     };
   } else if (typeof translation === "string") {
@@ -82,20 +128,27 @@ export const createTokenConfig: CreateTokenConfig = (translation, config) => {
       getMatch: () => reg,
       defaultValue: translation,
       additional: true,
+      id: config ? config.id : "",
+      subscribeTo: [],
       ...config,
     };
   }
 
-  return translation;
+  return {
+    ...config,
+    ...translation,
+  };
 };
 
 export const createConfig: CreateConfig = (value, translations = {}) => {
   const config: TokenConfig[] = [];
   const tokens = value.split("");
 
-  const addTranslation = (translation: Translation) => {
-    config.push(createTokenConfig(translation));
+  const addTranslation = (translation: Translation, index: number) => {
+    config.push(createTokenConfig(translation, { id: `token-${index}` }));
   };
+
+  let tokenIndex = 0;
 
   for (let index = 0; index < tokens.length; index += 1) {
     const token = tokens[index];
@@ -103,12 +156,17 @@ export const createConfig: CreateConfig = (value, translations = {}) => {
 
     if (translation) {
       if (translation instanceof Array) {
-        translation.forEach(addTranslation);
+        translation.forEach((subTranslation) => {
+          addTranslation(subTranslation, tokenIndex);
+          tokenIndex += 1;
+        });
       } else {
-        addTranslation(translation);
+        addTranslation(translation, tokenIndex);
+        tokenIndex += 1;
       }
     } else {
-      addTranslation(token);
+      addTranslation(token, tokenIndex);
+      tokenIndex += 1;
     }
   }
 
@@ -121,6 +179,51 @@ export const createMask: CreateMask = (stringMask, translations = {}) => {
   const config = createConfig(stringMask, translations);
 
   return createMaskByConfig(config);
+};
+
+type TokenListener = [number, number[]];
+
+type TokenListeners = TokenListener[];
+
+type BuildTokensListeners = (config: TokenConfig[]) => TokenListeners[];
+
+const buildTokensListeners: BuildTokensListeners = (config) => {
+  const indexTokens = buildIndexTokens(config);
+
+  return config.reduce<TokenListeners[]>((memo, tokenConfig, index) => {
+    const { subscribeTo = [] } = tokenConfig;
+
+    subscribeTo.forEach((tokenConfigId) => {
+      const tokenConfigIndex = indexTokens[tokenConfigId];
+
+      if (!memo[tokenConfigIndex]) {
+        memo[tokenConfigIndex] = [];
+      }
+
+      const indexSubscribes = subscribeTo.map((id) => indexTokens[id]);
+      memo[tokenConfigIndex].push([index, indexSubscribes]);
+    });
+
+    return memo;
+  }, []);
+};
+
+interface IndexTokens {
+  [tokenConfigId: string]: number;
+}
+
+type BuildIndexTokens = (config: TokenConfig[]) => IndexTokens;
+
+const buildIndexTokens: BuildIndexTokens = (config) => {
+  return config.reduce<IndexTokens>((memo, tokenConfig, index) => {
+    const { id } = tokenConfig;
+
+    if (id && memo[id] === undefined) {
+      memo[id] = index;
+    }
+
+    return memo;
+  }, {});
 };
 
 type BuildDefaultState = (value: string, cursor: number) => State;
@@ -141,11 +244,12 @@ interface BuildNextStateParams {
 
 type BuildNextState = (params: BuildNextStateParams) => State;
 
-const buildNextState: BuildNextState = ({ config, state, index }) => {
-  const { getMatch, defaultValue, additional = false } = config;
+const buildNextState: BuildNextState = (params) => {
+  const { config, state, index } = params;
+  const { getMatch, defaultValue = "", additional = false } = config;
 
   const match = getMatch(state, index);
-  const matchResult = state.remainder.match(match);
+  const matchResult = filterCursor(state.remainder).match(match);
 
   if (defaultValue || matchResult) {
     let nextState = { ...state };
