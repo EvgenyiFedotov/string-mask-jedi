@@ -24,7 +24,7 @@ export interface TokenConfig {
   additional: boolean;
 }
 
-type Converter = (tokens: Token[], config: TokenConfig[]) => Token[];
+type Converter = (tokens: Token[], config: TokenConfig[]) => void;
 
 interface CreateMaskOptions {
   converter?: Converter;
@@ -43,6 +43,9 @@ export const createMaskByConfig: CreateMaskByConfig = (
     let state = buildDefaultState(value, cursor);
 
     for (let index = 0; index < config.length; index += 1) {
+      Object.freeze(state);
+      Object.freeze(state.tokens);
+
       const nextState = buildNextState({ config: config[index], state, index });
 
       if (!nextState || nextState === state) {
@@ -52,7 +55,10 @@ export const createMaskByConfig: CreateMaskByConfig = (
       state = nextState;
 
       if (options.converter) {
-        state.tokens = options.converter(state.tokens, config);
+        Object.freeze(state);
+        Object.freeze(state.tokens);
+
+        options.converter(state.tokens, config);
       }
     }
 
@@ -178,7 +184,7 @@ const buildNextState: BuildNextState = (params) => {
   const matchResult = filterCursor(state.remainder).match(match);
 
   if (defaultValue || matchResult) {
-    let nextState = { ...state };
+    let nextState = { ...state, tokens: [...state.tokens] };
 
     const setToken = (value: string) => {
       nextState.tokens[index] = { value, additional };
@@ -213,7 +219,7 @@ const buildNextState: BuildNextState = (params) => {
 type BuildMaskResult = (state: State, config: TokenConfig[]) => MaskResult;
 
 const buildMaskResult: BuildMaskResult = (state, config) => {
-  const nextState = { ...state };
+  const nextState = { ...state, tokens: [...state.tokens] };
 
   // Check cursor, if one exist remove his and set cursor into nextState
   if (
