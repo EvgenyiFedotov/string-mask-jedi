@@ -18,13 +18,13 @@ export interface State {
 
 type GetMatch = (state: State, index: number) => RegExp;
 
-interface TokenConfig {
+export interface TokenConfig {
   getMatch: GetMatch;
   defaultValue: string;
   additional: boolean;
 }
 
-type Converter = (tokens: Token[]) => Token[];
+type Converter = (tokens: Token[], config: TokenConfig[]) => Token[];
 
 interface CreateMaskOptions {
   converter?: Converter;
@@ -52,7 +52,7 @@ export const createMaskByConfig: CreateMaskByConfig = (
       state = nextState;
 
       if (options.converter) {
-        state.tokens = options.converter(state.tokens);
+        state.tokens = options.converter(state.tokens, config);
       }
     }
 
