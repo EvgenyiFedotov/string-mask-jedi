@@ -10,7 +10,7 @@ const h2 = createTokenConfig(({ tokens: [h1] }) =>
 );
 const m1 = createTokenConfig(() => /([012345])/);
 
-const time = createMaskByConfig([h1, h2, s, m1, d]);
+const time = createMaskByConfig({ tokens: [h1, h2, s, m1, d] });
 
 test.each(sets.withoutCursor(time))("without cursor", checkValue);
 

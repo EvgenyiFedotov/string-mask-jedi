@@ -3,7 +3,7 @@ import {
   createMaskByConfig,
   Token,
   State,
-  TokenConfig,
+  Config,
 } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
@@ -46,14 +46,8 @@ const month1 = (state: State) => {
   return /\d/;
 };
 
-const dateConfig = createConfig("d/m/y", {
-  d: [/[0123]/, date1],
-  m: [/[01]/, month1],
-  y: [/\d/, /\d/, /\d/, /\d/],
-});
-
-const dateConverter = (tokens: Token[], config: TokenConfig[]) => {
-  if (tokens.length === config.length) {
+const converter = (tokens: Token[], config: Config) => {
+  if (tokens.length === config.tokens.length) {
     const day = tokensToValue([tokens[0], tokens[1]]);
     const month = tokensToValue([tokens[3], tokens[4]]);
     const year = tokensToValue([tokens[6], tokens[7], tokens[8], tokens[9]]);
@@ -73,9 +67,17 @@ const dateConverter = (tokens: Token[], config: TokenConfig[]) => {
   }
 };
 
-const date = createMaskByConfig(dateConfig, {
-  converter: dateConverter,
-});
+const config = createConfig(
+  "d/m/y",
+  {
+    d: [/[0123]/, date1],
+    m: [/[01]/, month1],
+    y: [/\d/, /\d/, /\d/, /\d/],
+  },
+  { converter },
+);
+
+const date = createMaskByConfig(config);
 
 test.each(sets.withoutCursor(date))("without cursor", checkValue);
 
