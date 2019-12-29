@@ -78,15 +78,15 @@ export const createTokenConfig: CreateTokenConfig = (translation, config) => {
   if (translation instanceof RegExp) {
     return {
       getMatch: () => translation,
-      additional: false,
       defaultValue: "",
+      additional: false,
       ...config,
     };
   } else if (translation instanceof Function) {
     return {
       getMatch: translation,
-      additional: false,
       defaultValue: "",
+      additional: false,
       ...config,
     };
   } else if (typeof translation === "string") {
