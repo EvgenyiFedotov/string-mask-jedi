@@ -24,29 +24,26 @@ export interface TokenConfig {
   additional: boolean;
 }
 
-type Converter = (tokens: Token[], config: TokenConfig[]) => void;
+type Converter = (tokens: Token[], config: Config) => void;
 
-interface CreateMaskOptions {
+export interface Config {
+  tokens: TokenConfig[];
   converter?: Converter;
 }
 
-type CreateMaskByConfig = (
-  config: TokenConfig[],
-  options?: CreateMaskOptions,
-) => Mask;
+type CreateMaskByConfig = (config: Config) => Mask;
 
-export const createMaskByConfig: CreateMaskByConfig = (
-  config,
-  options = {},
-) => {
+export const createMaskByConfig: CreateMaskByConfig = (config) => {
+  const { tokens, converter = () => {} } = config;
+
   return (value, cursor = 0) => {
     let state = buildDefaultState(value, cursor);
 
-    for (let index = 0; index < config.length; index += 1) {
+    for (let index = 0; index < tokens.length; index += 1) {
       Object.freeze(state);
       Object.freeze(state.tokens);
 
-      const nextState = buildNextState({ config: config[index], state, index });
+      const nextState = buildNextState({ config: tokens[index], state, index });
 
       if (!nextState || nextState === state) {
         break;
@@ -54,11 +51,11 @@ export const createMaskByConfig: CreateMaskByConfig = (
 
       state = nextState;
 
-      if (options.converter) {
+      if (converter) {
         Object.freeze(state);
         Object.freeze(state.tokens);
 
-        options.converter(state.tokens, config);
+        converter(state.tokens, config);
       }
     }
 
@@ -112,14 +109,22 @@ export const createTokenConfig: CreateTokenConfig = (translation, config) => {
 type CreateConfig = (
   stringMask: string,
   translations?: Translations,
-) => TokenConfig[];
+  options?: Partial<Omit<Config, "tokens">>,
+) => Config;
 
-export const createConfig: CreateConfig = (value, translations = {}) => {
-  const config: TokenConfig[] = [];
+export const createConfig: CreateConfig = (
+  value,
+  translations = {},
+  options,
+) => {
+  const config: Config = {
+    tokens: [],
+    ...options,
+  };
   const tokens = value.split("");
 
   const addTranslation = (translation: Translation) => {
-    config.push(createTokenConfig(translation));
+    config.tokens.push(createTokenConfig(translation));
   };
 
   for (let index = 0; index < tokens.length; index += 1) {
@@ -145,7 +150,7 @@ export const createConfig: CreateConfig = (value, translations = {}) => {
 type CreateMask = (
   stringMask: string,
   translations?: Translations,
-  options?: CreateMaskOptions,
+  options?: Partial<Omit<Config, "tokens">>,
 ) => Mask;
 
 export const createMask: CreateMask = (
@@ -155,7 +160,7 @@ export const createMask: CreateMask = (
 ) => {
   const config = createConfig(stringMask, translations);
 
-  return createMaskByConfig(config, options);
+  return createMaskByConfig(config);
 };
 
 type BuildDefaultState = (value: string, cursor: number) => State;
@@ -216,7 +221,7 @@ const buildNextState: BuildNextState = (params) => {
   return state;
 };
 
-type BuildMaskResult = (state: State, config: TokenConfig[]) => MaskResult;
+type BuildMaskResult = (state: State, config: Config) => MaskResult;
 
 const buildMaskResult: BuildMaskResult = (state, config) => {
   const nextState = { ...state, tokens: [...state.tokens] };
@@ -232,7 +237,10 @@ const buildMaskResult: BuildMaskResult = (state, config) => {
   }
 
   // Remove additional tokens if mask didn't complete
-  if (nextState.tokens.length && nextState.tokens.length < config.length) {
+  if (
+    nextState.tokens.length &&
+    nextState.tokens.length < config.tokens.length
+  ) {
     let lastToken = nextState.tokens[nextState.tokens.length - 1];
 
     while (lastToken && lastToken.additional) {
