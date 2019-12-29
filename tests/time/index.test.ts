@@ -1,16 +1,14 @@
-import { createTokenConfig, createMaskByConfig } from "../../src";
+import { createMask } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
 
-const d = createTokenConfig(() => /\d/);
-const s = createTokenConfig(() => /:/, { defaultValue: ":", additional: true });
-const h1 = createTokenConfig(() => /[012]/);
-const h2 = createTokenConfig(({ tokens: [h1] }) =>
-  h1.value.match(/([01])/) ? /(\d)/ : /([0123])/,
-);
-const m1 = createTokenConfig(() => /([012345])/);
-
-const time = createMaskByConfig({ tokens: [h1, h2, s, m1, d] });
+const time = createMask("h:m", {
+  h: [
+    /[012]/,
+    ({ tokens: [h1] }) => (h1.value.match(/([01])/) ? /(\d)/ : /([0123])/),
+  ],
+  m: [/([012345])/, /\d/],
+});
 
 test.each(sets.withoutCursor(time))("without cursor", checkValue);
 

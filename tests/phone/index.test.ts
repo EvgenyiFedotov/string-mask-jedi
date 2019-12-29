@@ -1,81 +1,14 @@
-import { createTokenConfig, createMaskByConfig } from "../../src";
+import { createTokenConfig, createMaskByConfig, createMask } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
 
-const d = createTokenConfig(() => /\d/);
-const plus = createTokenConfig(() => /\+/, {
-  defaultValue: "+",
-  additional: true,
-});
-const prenumber = createTokenConfig(() => /0/, {
-  defaultValue: "0",
-  additional: true,
-});
-const prenumberStrict = createTokenConfig(() => /^0/, {
-  defaultValue: "0",
-  additional: true,
-});
-const space = createTokenConfig(() => / /, {
-  defaultValue: " ",
-  additional: true,
-});
-const open = createTokenConfig(() => /\(/, {
-  defaultValue: "(",
-  additional: true,
-});
-const close = createTokenConfig(() => /\)/, {
-  defaultValue: ")",
-  additional: true,
-});
-const tr = createTokenConfig(() => /-/, {
-  defaultValue: "-",
-  additional: true,
+const phone = createMask("+0 (ddd) ddd-dd-dd", {
+  d: /\d/,
 });
 
-const phone = createMaskByConfig({
-  tokens: [
-    plus,
-    prenumber,
-    space,
-    open,
-    d,
-    d,
-    d,
-    close,
-    space,
-    d,
-    d,
-    d,
-    tr,
-    d,
-    d,
-    tr,
-    d,
-    d,
-  ],
-});
-
-const phoneStrict = createMaskByConfig({
-  tokens: [
-    plus,
-    prenumberStrict,
-    space,
-    open,
-    d,
-    d,
-    d,
-    close,
-    space,
-    d,
-    d,
-    d,
-    tr,
-    d,
-    d,
-    tr,
-    d,
-    d,
-  ],
+const phoneStrict = createMask("+z (ddd) ddd-dd-dd", {
+  z: { getMatch: () => /^0/, additional: true, defaultValue: "0" },
+  d: /\d/,
 });
 
 test.each(sets.withoutCursor(phone))("without cursor %#", checkValue);
