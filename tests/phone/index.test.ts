@@ -1,7 +1,7 @@
 import { createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
-import { config, configStrict } from "../../src/configs/phone";
+import { config, configStrict } from "../configs/phone";
 
 const phone = createMaskByConfig(config);
 

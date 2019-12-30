@@ -1,7 +1,7 @@
 import { createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
-import { config } from "../../src/configs/date";
+import { config } from "../configs/date";
 
 const date = createMaskByConfig(config);
 

@@ -1,4 +1,4 @@
-import { createConfig } from "../";
+import { createConfig } from "../../src";
 
 export const config = createConfig("h:m", {
   h: [

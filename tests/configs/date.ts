@@ -1,4 +1,4 @@
-import { Token, State, Config, createConfig } from "../";
+import { Token, State, Config, createConfig } from "../../src";
 
 const numToStr = (value: number): string => {
   return value < 10 ? `0${value}` : `${value}`;

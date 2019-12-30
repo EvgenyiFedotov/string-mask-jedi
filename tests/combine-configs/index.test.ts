@@ -4,7 +4,7 @@ import {
   createMaskByConfig,
   Token,
 } from "../../src";
-import * as configs from "../../src/configs";
+import * as configs from "../configs";
 
 describe("combine time", () => {
   const hoursConfig = createConfig("Hh", {
