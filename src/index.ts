@@ -3,19 +3,6 @@ export interface MaskResult {
   cursor: number;
 }
 
-export type Mask = (value: string, cursor?: number) => MaskResult;
-
-export interface Token {
-  value: string;
-  additional: boolean;
-}
-
-export interface State {
-  remainder: string;
-  tokens: Token[];
-  cursor: number;
-}
-
 type GetMatch = (state: State, index: number) => RegExp;
 
 export interface TokenConfig {
@@ -31,12 +18,34 @@ export interface Config {
   converter?: Converter;
 }
 
+const isConfig = (x: any): x is Config => {
+  return x.tokens instanceof Array;
+};
+
+type MaskRun = (value: string, cursor?: number) => MaskResult;
+
+export interface Mask {
+  run: MaskRun;
+  config: Config;
+}
+
+export interface Token {
+  value: string;
+  additional: boolean;
+}
+
+export interface State {
+  remainder: string;
+  tokens: Token[];
+  cursor: number;
+}
+
 type CreateMaskByConfig = (config: Config) => Mask;
 
 export const createMaskByConfig: CreateMaskByConfig = (config) => {
   const { tokens, converter = () => {} } = config;
 
-  return (value, cursor = 0) => {
+  const run: MaskRun = (value, cursor = 0) => {
     let state = buildDefaultState(value, cursor);
 
     for (let index = 0; index < tokens.length; index += 1) {
@@ -61,6 +70,8 @@ export const createMaskByConfig: CreateMaskByConfig = (config) => {
 
     return buildMaskResult(state, config);
   };
+
+  return { run, config };
 };
 
 type Translation = string | RegExp | GetMatch | TokenConfig;
@@ -186,9 +197,9 @@ type CreateMask = (
 export const createMask: CreateMask = (
   stringMask,
   translations = {},
-  options,
+  options = {},
 ) => {
-  const config = createConfig(stringMask, translations);
+  const config = createConfig(stringMask, translations, options);
 
   return createMaskByConfig(config);
 };
