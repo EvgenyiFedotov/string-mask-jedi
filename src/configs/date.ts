@@ -34,8 +34,6 @@ const month1 = (state: State) => {
   if (prevToken.value.match(/0/)) {
     return /[123456789]/;
   }
-
-  return /\d/;
 };
 
 const converter = (tokens: Token[], config: Config) => {
