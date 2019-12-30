@@ -1,15 +1,11 @@
-import { createTokenConfig, createMaskByConfig, createMask } from "../../src";
+import { createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
+import { config, configStrict } from "../../src/configs/phone";
 
-const phone = createMask("+0 (ddd) ddd-dd-dd", {
-  d: /\d/,
-});
+const phone = createMaskByConfig(config);
 
-const phoneStrict = createMask("+z (ddd) ddd-dd-dd", {
-  z: { getMatch: () => /^0/, additional: true, defaultValue: "0" },
-  d: /\d/,
-});
+const phoneStrict = createMaskByConfig(configStrict);
 
 test.each(sets.withoutCursor(phone))("without cursor %#", checkValue);
 

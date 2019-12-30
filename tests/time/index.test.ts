@@ -1,14 +1,9 @@
-import { createMask } from "../../src";
+import { createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
+import * as configs from "../../src/configs";
 
-const time = createMask("h:m", {
-  h: [
-    /[012]/,
-    ({ tokens: [h1] }) => (h1.value.match(/([01])/) ? /(\d)/ : /([0123])/),
-  ],
-  m: [/([012345])/, /\d/],
-});
+const time = createMaskByConfig(configs.time);
 
 test.each(sets.withoutCursor(time))("without cursor", checkValue);
 

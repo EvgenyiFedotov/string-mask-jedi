@@ -4,6 +4,7 @@ import {
   createMaskByConfig,
   Token,
 } from "../../src";
+import * as configs from "../../src/configs";
 
 describe("combine time", () => {
   const hoursConfig = createConfig("Hh", {
@@ -44,88 +45,11 @@ describe("combine time", () => {
 });
 
 describe("combine date with time", () => {
-  const numToStr = (value: number): string => {
-    return value < 10 ? `0${value}` : `${value}`;
-  };
-  const tokensToValue = (tokens: Token[]) => {
-    return tokens.map((token) => token.value).join("");
-  };
-
-  const time = createConfig("h:m", {
-    h: [
-      /[012]/,
-      ({ tokens: [h1] }) => (h1.value.match(/([01])/) ? /(\d)/ : /([0123])/),
-    ],
-    m: [/[012345]/, /\d/],
-  });
-  const date = createConfig(
-    "d/m/y",
-    {
-      d: [
-        /[0123]/,
-        (state) => {
-          const { tokens } = state;
-          const prevToken = tokens[tokens.length - 1];
-
-          if (prevToken.value.match(/3/)) {
-            return /[01]/;
-          }
-
-          if (prevToken.value.match(/0/)) {
-            return /[123456789]/;
-          }
-
-          return /\d/;
-        },
-      ],
-      m: [
-        /[01]/,
-        (state) => {
-          const { tokens } = state;
-          const prevToken = tokens[tokens.length - 1];
-
-          if (prevToken.value.match(/1/)) {
-            return /[012]/;
-          }
-
-          if (prevToken.value.match(/0/)) {
-            return /[123456789]/;
-          }
-
-          return /\d/;
-        },
-      ],
-      y: [/\d/, /\d/, /\d/, /\d/],
-    },
-    {
-      converter: (tokens, config) => {
-        if (tokens.length === config.tokens.length) {
-          const day = tokensToValue([tokens[0], tokens[1]]);
-          const month = tokensToValue([tokens[3], tokens[4]]);
-          const year = tokensToValue([
-            tokens[6],
-            tokens[7],
-            tokens[8],
-            tokens[9],
-          ]);
-          const date = new Date(`${year}-${month}-${day}`);
-          const dayArr = numToStr(date.getDate()).split("");
-          const monthArr = numToStr(date.getMonth() + 1).split("");
-          const yearArr = numToStr(date.getFullYear()).split("");
-
-          tokens[0].value = dayArr[0];
-          tokens[1].value = dayArr[1];
-          tokens[3].value = monthArr[0];
-          tokens[4].value = monthArr[1];
-          tokens[6].value = yearArr[0];
-          tokens[7].value = yearArr[1];
-          tokens[8].value = yearArr[2];
-          tokens[9].value = yearArr[3];
-        }
-      },
-    },
+  const dateTimeConfig = combineConfigs(
+    configs.date,
+    createConfig(" "),
+    configs.time,
   );
-  const dateTimeConfig = combineConfigs(date, createConfig(" "), time);
 
   test("structure", () => {
     expect(JSON.stringify(dateTimeConfig)).toBe(
