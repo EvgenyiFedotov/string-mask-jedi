@@ -31,6 +31,10 @@ export interface Config {
   converter?: Converter;
 }
 
+const isConfig = (x: any): x is Config => {
+  return x.tokens instanceof Array;
+};
+
 type CreateMaskByConfig = (config: Config) => Mask;
 
 export const createMaskByConfig: CreateMaskByConfig = (config) => {
@@ -145,6 +149,36 @@ export const createConfig: CreateConfig = (
   }
 
   return config;
+};
+
+type CombineConfigs = (...configs: Config[]) => Config;
+
+export const combineConfigs: CombineConfigs = (...configs) => {
+  const resultConfig: Config = {
+    tokens: [],
+    converter: () => {},
+  };
+
+  configs.forEach((config) => {
+    resultConfig.tokens = [...resultConfig.tokens, ...config.tokens];
+
+    if (resultConfig.converter && config.converter) {
+      resultConfig.converter = combineFn(
+        resultConfig.converter,
+        config.converter,
+      );
+    }
+  });
+
+  return resultConfig;
+};
+
+type CombineFn = <A extends Array<any> = [string, number]>(
+  ...fns: Function[]
+) => (...args: A) => void;
+
+const combineFn: CombineFn = (...fns) => {
+  return (...args) => fns.forEach((fn) => fn(...args));
 };
 
 type CreateMask = (
