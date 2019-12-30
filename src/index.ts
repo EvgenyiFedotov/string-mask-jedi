@@ -31,10 +31,6 @@ export interface Config {
   converter?: Converter;
 }
 
-const isConfig = (x: any): x is Config => {
-  return x.tokens instanceof Array;
-};
-
 type CreateMaskByConfig = (config: Config) => Mask;
 
 export const createMaskByConfig: CreateMaskByConfig = (config) => {
