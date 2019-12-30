@@ -29,6 +29,10 @@ export interface Mask {
   config: Config;
 }
 
+const isMask = (x: any): x is Mask => {
+  return x.run instanceof Function && isConfig(x.config);
+};
+
 export interface Token {
   value: string;
   additional: boolean;
@@ -74,7 +78,7 @@ export const createMaskByConfig: CreateMaskByConfig = (config) => {
   return { run, config };
 };
 
-type Translation = string | RegExp | GetMatch | TokenConfig;
+type Translation = string | RegExp | GetMatch | TokenConfig | Mask;
 
 interface Translations {
   [key: string]: Translation | Translation[];
@@ -83,38 +87,48 @@ interface Translations {
 type CreateTokenConfig = (
   translation: Translation,
   config?: Partial<Omit<TokenConfig, "getMatch">>,
-) => TokenConfig;
+) => TokenConfig[];
 
 export const createTokenConfig: CreateTokenConfig = (translation, config) => {
   if (translation instanceof RegExp) {
-    return {
-      getMatch: () => translation,
-      defaultValue: "",
-      additional: false,
-      ...config,
-    };
+    return [
+      {
+        getMatch: () => translation,
+        defaultValue: "",
+        additional: false,
+        ...config,
+      },
+    ];
   } else if (translation instanceof Function) {
-    return {
-      getMatch: translation,
-      defaultValue: "",
-      additional: false,
-      ...config,
-    };
+    return [
+      {
+        getMatch: translation,
+        defaultValue: "",
+        additional: false,
+        ...config,
+      },
+    ];
   } else if (typeof translation === "string") {
     const reg = new RegExp(translation.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
 
-    return {
-      getMatch: () => reg,
-      defaultValue: translation,
-      additional: true,
-      ...config,
-    };
+    return [
+      {
+        getMatch: () => reg,
+        defaultValue: translation,
+        additional: true,
+        ...config,
+      },
+    ];
+  } else if (isMask(translation)) {
+    return [...translation.config.tokens];
   }
 
-  return {
-    ...config,
-    ...translation,
-  };
+  return [
+    {
+      ...config,
+      ...translation,
+    },
+  ];
 };
 
 type CreateConfig = (
@@ -135,7 +149,15 @@ export const createConfig: CreateConfig = (
   const tokens = value.split("");
 
   const addTranslation = (translation: Translation) => {
-    config.tokens.push(createTokenConfig(translation));
+    const converter = isMask(translation) && translation.config.converter;
+
+    config.tokens = [...config.tokens, ...createTokenConfig(translation)];
+
+    if (config.converter && converter) {
+      config.converter = combineFn(config.converter, converter);
+    } else if (!config.converter && converter) {
+      config.converter = converter;
+    }
   };
 
   for (let index = 0; index < tokens.length; index += 1) {
