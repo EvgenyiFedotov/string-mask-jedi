@@ -10,6 +10,7 @@ export const withoutCursor = (mask: Mask) => [
   [mask("31/13"), "31/1"],
   [mask("00/00"), "0"],
   [mask("01/00"), "01/0"],
+  [mask("21121889"), "21/12/1889"],
 ];
 
 export const withCursor = {
