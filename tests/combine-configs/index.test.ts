@@ -40,7 +40,7 @@ describe("combine time", () => {
   test("run mask", () => {
     const time = createMaskByConfig(timeConfig);
 
-    expect(time("2345").value).toBe("23:45");
+    expect(time.run("2345").value).toBe("23:45");
   });
 });
 
@@ -123,6 +123,6 @@ describe("combine date with time", () => {
   test("run mask", () => {
     const dateTime = createMaskByConfig(dateTimeConfig);
 
-    expect(dateTime("010120200355").value).toBe("01/01/2020 03:55");
+    expect(dateTime.run("010120200355").value).toBe("01/01/2020 03:55");
   });
 });
