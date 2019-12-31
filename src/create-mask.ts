@@ -67,11 +67,13 @@ export const createMask: CreateMask = (
 
       state = nextState;
 
-      if (config.converter) {
+      if (config.converters.length) {
         Object.freeze(state);
         Object.freeze(state.tokens);
 
-        config.converter(state.tokens, config);
+        config.converters.forEach((converter) => {
+          converter(state.tokens, config.tokens);
+        });
       }
     }
 

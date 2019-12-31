@@ -1,5 +1,4 @@
 import { GetMatch, Token, Mask, isMask } from "./create-mask";
-import { combineFn } from "./helpers";
 
 export interface TokenConfig {
   getMatch: GetMatch;
@@ -7,15 +6,15 @@ export interface TokenConfig {
   additional: boolean;
 }
 
-export type Converter = (tokens: Token[], config: Config) => void;
+export type Converter = (tokens: Token[], configTokens: TokenConfig[]) => void;
 
 export interface Config {
   tokens: TokenConfig[];
-  converter?: Converter;
+  converters: Converter[];
 }
 
 export const isConfig = (x: any): x is Config => {
-  return x.tokens instanceof Array;
+  return x.tokens instanceof Array && x.converters instanceof Array;
 };
 
 type Translation = string | RegExp | GetMatch | TokenConfig | Mask;
@@ -84,20 +83,30 @@ export const createConfig: CreateConfig = (
 ) => {
   const config: Config = {
     tokens: [],
+    converters: [],
     ...options,
   };
   const tokens = value.split("");
 
   const addTranslation = (translation: Translation) => {
-    const converter = isMask(translation) && translation.config.converter;
+    const parseTranlationResult = parseTranlation(translation);
 
-    config.tokens = [...config.tokens, ...parseTranlation(translation)];
+    if (isMask(translation)) {
+      const left = config.tokens.length;
+      const right = left + parseTranlationResult.length;
+      const translationConverters = translation.config.converters.map(
+        (converter) => (tokens: Token[], configTokens: TokenConfig[]) => {
+          return converter(
+            tokens.slice(left, right),
+            configTokens.slice(left, right),
+          );
+        },
+      );
 
-    if (config.converter && converter) {
-      config.converter = combineFn(config.converter, converter);
-    } else if (!config.converter && converter) {
-      config.converter = converter;
+      config.converters = [...config.converters, ...translationConverters];
     }
+
+    config.tokens = [...config.tokens, ...parseTranlationResult];
   };
 
   for (let index = 0; index < tokens.length; index += 1) {
