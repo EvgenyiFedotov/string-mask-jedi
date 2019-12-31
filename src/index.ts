@@ -1,2 +1,2 @@
-export { createMask, Token, State } from "./create-mask";
-export { Config } from "./create-config";
+export { createMask, Token, State, GetMatch } from "./create-mask";
+export { TokenConfig, Config } from "./create-config";
