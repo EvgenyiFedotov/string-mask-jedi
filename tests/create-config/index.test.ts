@@ -4,7 +4,7 @@ import { createMask } from "../../src";
 test("without paraments", () => {
   const config = createConfig("");
 
-  expect(config).toEqual({ tokens: [] });
+  expect(config).toEqual({ tokens: [], converters: [] });
 });
 
 test("with translations", () => {
@@ -25,13 +25,14 @@ test("with translations", () => {
         { getMatch: () => /\d/, defaultValue: "", additional: false },
         { getMatch: () => /\)/, defaultValue: ")", additional: true },
       ],
+      converters: [],
     }),
   );
 });
 
 test("with converter", () => {
   const converter = () => {};
-  const config = createConfig("+d", { d: /\d/ }, { converter });
+  const config = createConfig("+d", { d: /\d/ }, { converters: [converter] });
 
   expect(JSON.stringify(config)).toBe(
     JSON.stringify({
@@ -39,7 +40,7 @@ test("with converter", () => {
         { getMatch: () => /\+/, defaultValue: "+", additional: true },
         { getMatch: () => /\d/, defaultValue: "", additional: false },
       ],
-      converter,
+      converters: [converter],
     }),
   );
 });
@@ -78,6 +79,7 @@ test("combine masks", () => {
         { getMatch: () => /\d/, defaultValue: "", additional: false },
         { getMatch: () => /\d/, defaultValue: "", additional: false },
       ],
+      converters: [],
     }),
   );
 });

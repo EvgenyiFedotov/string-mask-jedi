@@ -1,4 +1,4 @@
-import { Token, State, Config, createMask } from "../../src";
+import { Token, State, createMask, Converter } from "../../src";
 
 const numToStr = (value: number): string => {
   return value < 10 ? `0${value}` : `${value}`;
@@ -36,8 +36,8 @@ const month1 = (state: State) => {
   }
 };
 
-const converter = (tokens: Token[], config: Config) => {
-  if (tokens.length === config.tokens.length) {
+const converter: Converter = (tokens, configTokens) => {
+  if (tokens.length === configTokens.length) {
     const day = tokensToValue([tokens[0], tokens[1]]);
     const month = tokensToValue([tokens[3], tokens[4]]);
     const year = tokensToValue([tokens[6], tokens[7], tokens[8], tokens[9]]);
@@ -64,5 +64,5 @@ export const mask = createMask(
     m: [/[01]/, month1],
     y: [/\d/, /\d/, /\d/, /\d/],
   },
-  { converter },
+  { converters: [converter] },
 );
