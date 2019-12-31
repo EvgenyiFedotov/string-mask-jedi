@@ -5,7 +5,7 @@ const numToStr = (value: number): string => {
 };
 
 const tokensToValue = (tokens: Token[]) => {
-  return tokens.map((token) => token.value).join("");
+  return parseInt(tokens.map((token) => token.value).join(""));
 };
 
 const date1 = (state: State) => {
@@ -41,7 +41,7 @@ const converter: Converter = (tokens, configTokens) => {
     const day = tokensToValue([tokens[0], tokens[1]]);
     const month = tokensToValue([tokens[3], tokens[4]]);
     const year = tokensToValue([tokens[6], tokens[7], tokens[8], tokens[9]]);
-    const date = new Date(`${year}-${month}-${day}`);
+    const date = new Date(year, month - 1, day);
     const dayArr = numToStr(date.getDate()).split("");
     const monthArr = numToStr(date.getMonth() + 1).split("");
     const yearArr = numToStr(date.getFullYear()).split("");
