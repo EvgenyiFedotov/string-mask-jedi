@@ -1,3 +1,3 @@
-export { config as date } from "./date";
-export { config as phone, configStrict as phoneStrict } from "./phone";
-export { config as time } from "./time";
+export { mask as date } from "./date";
+export { mask as phone, maskStrict as phoneStrict } from "./phone";
+export { mask as time } from "./time";

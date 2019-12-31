@@ -1,15 +1,11 @@
-import {
-  createTokenConfig,
-  State,
-  createMaskByConfig,
-  createConfig,
-} from "../../src";
+import { parseTranlation } from "../../src/create-config";
+import { State, createMask } from "../../src";
 
 const state: State = { cursor: 0, tokens: [], remainder: "" };
 
 test.each([
-  [createTokenConfig("+"), "+", true],
-  [createTokenConfig(":", { additional: false }), ":", false],
+  [parseTranlation("+"), "+", true],
+  [parseTranlation(":", { additional: false }), ":", false],
 ])("string %#", (config, defaultValue, additional) => {
   if (config[0] instanceof Object) {
     expect(config[0].getMatch).toBeInstanceOf(Function);
@@ -20,9 +16,9 @@ test.each([
 });
 
 test.each([
-  [createTokenConfig(/\d/), "", false],
-  [createTokenConfig(/\d/, { defaultValue: "_" }), "_", false],
-  [createTokenConfig(/\d/, { defaultValue: "_", additional: true }), "_", true],
+  [parseTranlation(/\d/), "", false],
+  [parseTranlation(/\d/, { defaultValue: "_" }), "_", false],
+  [parseTranlation(/\d/, { defaultValue: "_", additional: true }), "_", true],
 ])("RegExp %#", (config, defaultValue, additional) => {
   if (config[0] instanceof Object) {
     expect(config[0].getMatch).toBeInstanceOf(Function);
@@ -40,14 +36,14 @@ describe("getMatch", () => {
   });
 
   test.each([
-    [createTokenConfig((...args) => getMatch(...args)), "", false],
+    [parseTranlation((...args) => getMatch(...args)), "", false],
     [
-      createTokenConfig((...args) => getMatch(...args), { defaultValue: "_" }),
+      parseTranlation((...args) => getMatch(...args), { defaultValue: "_" }),
       "_",
       false,
     ],
     [
-      createTokenConfig((...args) => getMatch(...args), { additional: true }),
+      parseTranlation((...args) => getMatch(...args), { additional: true }),
       "",
       true,
     ],
@@ -71,7 +67,7 @@ describe("TokenConfig", () => {
 
   test.each([
     [
-      createTokenConfig({
+      parseTranlation({
         getMatch: (...args) => getMatch(...args),
         additional: false,
         defaultValue: "",
@@ -81,7 +77,7 @@ describe("TokenConfig", () => {
     ],
 
     [
-      createTokenConfig({
+      parseTranlation({
         getMatch: (...args) => getMatch(...args),
         defaultValue: "",
         additional: true,
@@ -90,7 +86,7 @@ describe("TokenConfig", () => {
       true,
     ],
     [
-      createTokenConfig({
+      parseTranlation({
         getMatch: (...args) => getMatch(...args),
         defaultValue: "+",
         additional: false,
@@ -110,12 +106,10 @@ describe("TokenConfig", () => {
 });
 
 test("Mask", () => {
-  const tokensConfig = createTokenConfig(
-    createMaskByConfig(
-      createConfig("dd:dd", {
-        d: /\d/,
-      }),
-    ),
+  const tokensConfig = parseTranlation(
+    createMask("dd:dd", {
+      d: /\d/,
+    }),
   );
 
   expect(JSON.stringify(tokensConfig)).toBe(

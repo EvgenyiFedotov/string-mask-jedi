@@ -1,6 +1,6 @@
-import { createConfig } from "../../src";
+import { createMask } from "../../src";
 
-export const config = createConfig("h:m", {
+export const mask = createMask("h:m", {
   h: [
     /[012]/,
     ({ tokens: [h1] }) => (h1.value.match(/([01])/) ? /(\d)/ : /([0123])/),

@@ -1,4 +1,4 @@
-import { Token, State, Config, createConfig } from "../../src";
+import { Token, State, Config, createMask } from "../../src";
 
 const numToStr = (value: number): string => {
   return value < 10 ? `0${value}` : `${value}`;
@@ -57,7 +57,7 @@ const converter = (tokens: Token[], config: Config) => {
   }
 };
 
-export const config = createConfig(
+export const mask = createMask(
   "d/m/y",
   {
     d: [/[0123]/, date1],

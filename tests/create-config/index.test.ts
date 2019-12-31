@@ -1,4 +1,5 @@
-import { createConfig, createMaskByConfig } from "../../src";
+import { createConfig } from "../../src/create-config";
+import { createMask } from "../../src";
 
 test("without paraments", () => {
   const config = createConfig("");
@@ -45,16 +46,12 @@ test("with converter", () => {
 
 test("combine masks", () => {
   const dateTime = createConfig("d t", {
-    d: createMaskByConfig(
-      createConfig("dd/dd/dddd", {
-        d: /\d/,
-      }),
-    ),
-    t: createMaskByConfig(
-      createConfig("dd:dd", {
-        d: /\d/,
-      }),
-    ),
+    d: createMask("dd/dd/dddd", {
+      d: /\d/,
+    }),
+    t: createMask("dd:dd", {
+      d: /\d/,
+    }),
   });
 
   expect(JSON.stringify(dateTime)).toBe(

@@ -1,36 +1,31 @@
-import { createMaskByConfig } from "../../src";
 import * as sets from "./sets";
 import { checkValue, checkValueCursor } from "../common";
-import { config, configStrict } from "../configs/phone";
+import { mask, maskStrict } from "../configs/phone";
 
-const phone = createMaskByConfig(config);
+test.each(sets.withoutCursor(mask))("without cursor %#", checkValue);
 
-const phoneStrict = createMaskByConfig(configStrict);
-
-test.each(sets.withoutCursor(phone))("without cursor %#", checkValue);
-
-test.each(sets.withoutCursor(phoneStrict, true))(
+test.each(sets.withoutCursor(maskStrict, true))(
   "without cursor [strict] %#",
   checkValue,
 );
 
 describe("with cursor", () => {
-  test.each(sets.withCursor.stepByStep(phone))(
+  test.each(sets.withCursor.stepByStep(mask))(
     "step by step %#",
     checkValueCursor,
   );
 
-  test.each(sets.withCursor.stepByStep(phoneStrict))(
+  test.each(sets.withCursor.stepByStep(maskStrict))(
     "step by step [strict] %#",
     checkValueCursor,
   );
 
-  test.each(sets.withCursor.insertIntoBetween(phone))(
+  test.each(sets.withCursor.insertIntoBetween(mask))(
     "insert into between %#",
     checkValueCursor,
   );
 
-  test.each(sets.withCursor.insertIntoBetween(phoneStrict, true))(
+  test.each(sets.withCursor.insertIntoBetween(maskStrict, true))(
     "insert into between [strict] %#",
     checkValueCursor,
   );
