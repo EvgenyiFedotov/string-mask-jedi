@@ -3,8 +3,8 @@
   "compilerOptions": {
     "declaration": true,
     "declarationDir": "./typings",
-    "outDir": "./dist",
+    "outDir": "./typings",
     "removeComments": true,
-    "sourceMap": true
+    "emitDeclarationOnly": true
   }
 }
