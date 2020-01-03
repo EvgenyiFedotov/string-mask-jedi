@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "es5",
     "module": "commonjs",
-    "baseUrl": "./src",
     "strict": true,
     "lib": ["dom", "dom.iterable", "esnext", "es2016", "es2015"],
     "moduleResolution": "node",
@@ -12,13 +11,5 @@
     "types": ["jest"],
     "strictNullChecks": true
   },
-  "include": ["src/index.ts"],
-  "exclude": [
-    "./typings",
-    "types",
-    "node_modules",
-    "./tests",
-    "./**/*.stories.tsx",
-    "stories"
-  ]
+  "exclude": ["./typings", "./tests", "./stories"]
 }
