@@ -45,12 +45,16 @@
     "@storybook/addon-info": "^5.2.8",
     "@storybook/addon-storysource": "^5.2.8",
     "@storybook/react": "^5.2.8",
+    "@types/enzyme": "^3.10.4",
+    "@types/enzyme-adapter-react-16": "^1.0.5",
     "@types/jest": "^24.0.23",
     "@types/react": "^16.9.17",
     "@types/react-dom": "^16.9.4",
     "babel-loader": "^8.0.6",
     "babel-plugin-add-module-exports": "^1.0.2",
     "compression-webpack-plugin": "^3.0.1",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.2",
     "eslint": "^6.7.1",
     "eslint-plugin-prettier": "^3.1.1",
     "jest": "^24.9.0",
@@ -71,5 +75,9 @@
     "react": "^16.12.0",
     "react-dom": "^16.12.0"
   },
-  "dependencies": {}
+  "jest": {
+    "setupFilesAfterEnv": [
+      "<rootDir>/jest.setup.js"
+    ]
+  }
 }
