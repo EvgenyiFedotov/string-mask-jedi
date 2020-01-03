@@ -7,8 +7,6 @@
   "scripts": {
     "clean": "rm -fr dist typings",
     "test": "jest",
-    "uglifyjs": "uglifyjs ./dist/index.js --mangle-props keep_quoted -c toplevel,sequences=false -o ./dist/index.js",
-    "postbuild": "yarn uglifyjs",
     "build": "tsc -p tsconfig.build.json && webpack --mode=production",
     "rebuild": "yarn clean && yarn build",
     "link:pack": "sh ./scripts/link-pack.sh",
@@ -28,7 +26,9 @@
   ],
   "files": [
     "dist",
-    "typings"
+    "typings",
+    "react.js",
+    "react.d.ts"
   ],
   "author": "Evgeniy Fedotov",
   "license": "MIT",
@@ -64,7 +64,6 @@
     "tslint-config-prettier": "^1.18.0",
     "tslint-react": "^4.1.0",
     "typescript": "^3.7.2",
-    "uglify-js": "^3.7.2",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   },

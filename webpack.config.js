@@ -3,11 +3,11 @@ const CompressionPlugin = require("compression-webpack-plugin");
 
 module.exports = {
   context: path.resolve(__dirname, "src"),
-  entry: { index: "./index.ts" },
+  entry: { index: "./index.ts", react: "./react/index.ts" },
   devtool: "sourcemap",
   output: {
     library: "string-mask-jedi",
-    libraryTarget: "umd",
+    libraryTarget: "commonjs2",
     filename: "./[name].js",
     path: path.resolve(__dirname, "dist"),
   },
@@ -30,4 +30,8 @@ module.exports = {
     ],
   },
   plugins: [new CompressionPlugin()],
+  externals: {
+    react: "react",
+    "react-dom": "react-dom",
+  },
 };

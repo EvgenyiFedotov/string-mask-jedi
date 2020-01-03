@@ -1,15 +1,14 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "es6",
+    "module": "es2015",
     "strict": true,
-    "lib": ["dom", "dom.iterable", "esnext", "es2016", "es2015"],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
-    "jsx": "preserve",
     "types": ["jest"],
     "strictNullChecks": true
   },
-  "exclude": ["./typings", "./tests", "./stories"]
+  "exclude": ["./typings", "./tests", "./stories", "./react.d.ts"]
 }
