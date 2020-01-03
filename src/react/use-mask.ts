@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Mask, MaskResult } from "../../src";
+import { Mask, MaskResult } from "..";
 
 const isHTMLInput = (x: any): x is HTMLInputElement | HTMLTextAreaElement => {
   return typeof x.value === "string";
@@ -14,7 +14,7 @@ interface UseStringMaskResult<T = any> {
   onChange: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => void;
-  ref: React.MutableRefObject<T>;
+  ref: React.RefObject<T>;
 }
 
 export const useMask = <T = HTMLInputElement>(
@@ -34,7 +34,9 @@ export const useMask = <T = HTMLInputElement>(
       const { currentTarget } = event;
       const { value, selectionStart } = currentTarget;
 
-      setMaskResult(mask.run(value, selectionStart));
+      if (typeof selectionStart === "number") {
+        setMaskResult(mask.run(value, selectionStart));
+      }
     },
     [mask],
   );
