@@ -12,7 +12,8 @@
     "link:pack": "sh ./scripts/link-pack.sh",
     "unlink:pack": "sh ./scripts/unlink-pack.sh",
     "prepack": "yarn rebuild",
-    "storybook": "start-storybook"
+    "storybook": "start-storybook",
+    "publish:storybook": "sh ./scripts/publish-storybook.sh"
   },
   "repository": {
     "type": "git",
