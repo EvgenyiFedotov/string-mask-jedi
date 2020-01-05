@@ -1,10 +1,10 @@
 # 🛠 String-mask-jedi
 
-[![npm](https://img.shields.io/npm/v/use-promise-element?style=flat)](https://www.npmjs.com/package/use-promise-element)
-[![npm bundle size](https://img.shields.io/bundlephobia/min/use-promise-element?color=success&label=minified&style=flat)](https://bundlephobia.com/result?p=use-promise-element)
-![license](https://img.shields.io/npm/l/use-promise-element?style=flat)
-![David](https://img.shields.io/david/EvgenyiFedotov/use-promise-element?style=flat)
-[![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://evgenyifedotov.github.io/use-promise-element)
+[![npm](https://img.shields.io/npm/v/string-mask-jedi?style=flat)](https://www.npmjs.com/package/string-mask-jedi)
+[![npm bundle size](https://img.shields.io/bundlephobia/min/string-mask-jedi?color=success&label=minified&style=flat)](https://bundlephobia.com/result?p=string-mask-jedi)
+![license](https://img.shields.io/npm/l/string-mask-jedi?style=flat)
+![David](https://img.shields.io/david/EvgenyiFedotov/string-mask-jedi?style=flat)
+[![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://evgenyifedotov.github.io/string-mask-jedi)
 
 This package allows you to create dynamic masks for the input field with the ability to control the cursor position.
 
@@ -66,6 +66,10 @@ type CreateMask = (
 ) => Mask;
 ```
 
+_[[Translations]](#getprops-export)_
+_[[Config]](#UsePromiseElement)_
+_[[Mask]](#UsePromiseElement)_
+
 ### `Token`
 
 Object witch cached value letter when process value after mask running.
@@ -89,6 +93,8 @@ interface State {
 }
 ```
 
+_[[Token]](#getprops-export)_
+
 ### `GetMatch`
 
 Method fot get `RegExp` for each token.
@@ -100,6 +106,9 @@ type GetMatch = (state: State, index: number) => RegExp;
 ### `Mask`
 
 Restult `createMask`.
+
+_[[MaskRun]](#getprops-export)_
+_[[Config]](#getprops-export)_
 
 ```ts
 interface Mask {
@@ -131,6 +140,8 @@ interface TokenConfig {
 }
 ```
 
+_[[GetMatch]](#getprops-export)_
+
 ### `Config`
 
 Config for create mask.
@@ -144,6 +155,9 @@ interface Config {
 }
 ```
 
+_[[TokenConfig]](#getprops-export)_
+_[[Converter]](#getprops-export)_
+
 ### `Converter`
 
 Method for converting result after
@@ -151,6 +165,9 @@ Method for converting result after
 ```ts
 type Converter = (tokens: Token[], configTokens: TokenConfig[]) => void;
 ```
+
+_[[Token]](#getprops-export)_
+_[[TokenConfig]](#getprops-export)_
 
 ---
 
@@ -160,6 +177,9 @@ type Converter = (tokens: Token[], configTokens: TokenConfig[]) => void;
 type Translation = string | RegExp | GetMatch | TokenConfig | Mask;
 ```
 
+_[[GetMatch]](#getprops-export)_
+_[[TokenConfig]](#getprops-export)_
+
 ### `Translations`
 
 ```ts
@@ -168,12 +188,28 @@ interface Translations {
 }
 ```
 
+_[[Translation]](#getprops-export)_
+
 ### `RunMask`
 
 ```ts
 type MaskRun = (value: string, cursor?: number) => MaskResult;
 ```
 
+_[[MaskResult]](#getprops-export)_
+
 ## Examples
 
 See storybook with examples code.
+
+## Tests
+
+```sh
+# npm
+npm install
+npm run test
+
+# yarn
+yarn install
+yarn test
+```
