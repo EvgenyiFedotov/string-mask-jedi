@@ -66,9 +66,9 @@ type CreateMask = (
 ) => Mask;
 ```
 
-_[[Translations]](#getprops-export)_
-_[[Config]](#UsePromiseElement)_
-_[[Mask]](#UsePromiseElement)_
+_[[Translations]](#translation)_
+_[[Config]](#config)_
+_[[Mask]](#mask)_
 
 ### `Token`
 
@@ -93,7 +93,7 @@ interface State {
 }
 ```
 
-_[[Token]](#getprops-export)_
+_[[Token]](#token)_
 
 ### `GetMatch`
 
@@ -107,15 +107,15 @@ type GetMatch = (state: State, index: number) => RegExp;
 
 Restult `createMask`.
 
-_[[MaskRun]](#getprops-export)_
-_[[Config]](#getprops-export)_
-
 ```ts
 interface Mask {
   run: MaskRun;
   config: Config;
 }
 ```
+
+_[[MaskRun]](#maskrun)_
+_[[Config]](#config)_
 
 ### `MaskResult`
 
@@ -140,7 +140,7 @@ interface TokenConfig {
 }
 ```
 
-_[[GetMatch]](#getprops-export)_
+_[[GetMatch]](#getmatch)_
 
 ### `Config`
 
@@ -155,8 +155,8 @@ interface Config {
 }
 ```
 
-_[[TokenConfig]](#getprops-export)_
-_[[Converter]](#getprops-export)_
+_[[TokenConfig]](#tokenconfig)_
+_[[Converter]](#converter)_
 
 ### `Converter`
 
@@ -166,8 +166,8 @@ Method for converting result after
 type Converter = (tokens: Token[], configTokens: TokenConfig[]) => void;
 ```
 
-_[[Token]](#getprops-export)_
-_[[TokenConfig]](#getprops-export)_
+_[[Token]](#token)_
+_[[TokenConfig]](#tokenconfig)_
 
 ---
 
@@ -177,8 +177,8 @@ _[[TokenConfig]](#getprops-export)_
 type Translation = string | RegExp | GetMatch | TokenConfig | Mask;
 ```
 
-_[[GetMatch]](#getprops-export)_
-_[[TokenConfig]](#getprops-export)_
+_[[GetMatch]](#getmatch)_
+_[[TokenConfig]](#tokenconfig)_
 
 ### `Translations`
 
@@ -188,15 +188,15 @@ interface Translations {
 }
 ```
 
-_[[Translation]](#getprops-export)_
+_[[Translation]](#translation)_
 
-### `RunMask`
+### `MaskRun`
 
 ```ts
 type MaskRun = (value: string, cursor?: number) => MaskResult;
 ```
 
-_[[MaskResult]](#getprops-export)_
+_[[MaskResult]](#maskresult)_
 
 ## Examples
 
