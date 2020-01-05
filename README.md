@@ -27,11 +27,13 @@ yarn add string-mask-jedi
 ```ts
 import { createMask } from "string-mask-jedi";
 
-const phoneMask = creaateMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
+const phoneMask = createMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
 
 console.log(phoneMask.run("9998887766").value);
 // +0 (999) 888-77-66
 ```
+
+_[[createMask]](#createMask)_
 
 ### React hook
 
@@ -40,7 +42,7 @@ import * as React from "react";
 import { createMask } from "string-mask-jedi";
 import { useMask } from "string-mask-jedi/react";
 
-const phoneMask = creaateMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
+const phoneMask = createMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
 
 const App: React.FC = () => {
   const { value, onChange, ref } = useMask(phoneMask);
@@ -48,6 +50,9 @@ const App: React.FC = () => {
   return <input value={value} onChange={onChange} ref={ref} />;
 };
 ```
+
+_[[createMask]](#createMask)_
+_[[useMask]](#useMask)_
 
 ## API
 
@@ -197,6 +202,33 @@ type MaskRun = (value: string, cursor?: number) => MaskResult;
 ```
 
 _[[MaskResult]](#maskresult)_
+
+## API for React
+
+### `useMask`
+
+React hook for use mask.
+
+```ts
+type useMask = <T = HTMLInputElement>(mask: Mask) => UseStringMaskResult<T>;
+```
+
+_[[Mask]](#mask)_
+_[[UseStringMaskResult]](#UseStringMaskResult)_
+
+### `UseStringMaskResult`
+
+Result react hook `useMask`.
+
+```ts
+interface UseStringMaskResult<T = any> {
+  value: string;
+  onChange: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
+  ref: React.RefObject<T>;
+}
+```
 
 ## Examples
 
