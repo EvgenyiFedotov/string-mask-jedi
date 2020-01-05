@@ -9,7 +9,7 @@ type OnChange = React.ChangeEventHandler<
   HTMLInputElement | HTMLTextAreaElement
 >;
 
-interface UseStringMaskResult<T = any> {
+interface UseStringMaskResult<T = HTMLInputElement | HTMLTextAreaElement> {
   value: string;
   onChange: (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
