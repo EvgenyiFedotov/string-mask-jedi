@@ -8,7 +8,7 @@
 
 This package allows you to create dynamic masks for the input field with the ability to control the cursor position.
 
-![string-mask-jedi demo]()
+![string-mask-jedi demo](https://raw.githubusercontent.com/EvgenyiFedotov/string-mask-jedi/readme/next/readme/show-mask.gif)
 
 ## Install
 
@@ -201,6 +201,10 @@ _[[MaskResult]](#getprops-export)_
 ## Examples
 
 See storybook with examples code.
+
+- [Date](#link)
+- [Time](#link)
+- [Phone](#link)
 
 ## Tests
 
