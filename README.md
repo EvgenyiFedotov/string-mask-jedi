@@ -234,9 +234,9 @@ interface UseStringMaskResult<T = any> {
 
 See storybook with examples code.
 
-- [Date](#link)
-- [Time](#link)
-- [Phone](#link)
+- [Date](https://evgenyifedotov.github.io/string-mask-jedi/?path=/story/date--init)
+- [Time](https://evgenyifedotov.github.io/string-mask-jedi/?path=/story/time--init)
+- [Phone](https://evgenyifedotov.github.io/string-mask-jedi/?path=/story/phone--init)
 
 ## Tests
 
