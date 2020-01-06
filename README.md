@@ -1,393 +1,251 @@
-# string-mask-jedi
+# 🛠 String-mask-jedi
+
+[![npm](https://img.shields.io/npm/v/string-mask-jedi?style=flat)](https://www.npmjs.com/package/string-mask-jedi)
+[![npm bundle size](https://img.shields.io/bundlephobia/min/string-mask-jedi?color=success&label=minified&style=flat)](https://bundlephobia.com/result?p=string-mask-jedi)
+![license](https://img.shields.io/npm/l/string-mask-jedi?style=flat)
+![David](https://img.shields.io/david/EvgenyiFedotov/string-mask-jedi?style=flat)
+[![Storybook](https://cdn.jsdelivr.net/gh/storybookjs/brand@master/badge/badge-storybook.svg)](https://evgenyifedotov.github.io/string-mask-jedi)
 
 This package allows you to create dynamic masks for the input field with the ability to control the cursor position.
 
-#### Examples
-[Config phone mask](#config-phone-mask)  
-[Config time mask](#config-time-mask)  
-[Config phone mask with repeat elements](#config-phone-mask-with-repeat-elements)  
-[Create config mask by string](#create-config-mask-by-string)  
-[Create mask](#create-mask)  
-[Сreate a mask with a handler](#сreate-a-mask-with-a-handler)  
-[Create combine mask](#create-combine-mask)  
-[Use mask phone](#use-mask-phone)  
-[Use mask combine phone](#use-mask-combine-phone)  
-[Use mask phone in React.Component](#use-mask-phone-in-reactcomponent)  
+![string-mask-jedi demo](https://raw.githubusercontent.com/EvgenyiFedotov/string-mask-jedi/readme/show-mask.gif)
 
-## Examples
-### Config phone mask
-```javascript
-const configMask = [
-  () => ({ match: /(^7|\+7)/, replace: '+7' }),
-  () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: ') $1', space: ') ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-];
+## Install
 
-// '79998887766' => '+7 (999) 888-77-66'
-``` 
+```sh
+# npm
+npm install string-mask-jedi
 
-### Config time mask
-```javascript
-const configMask = [
-  () => ({ match: /([012])/, replace: '$1', space: '_' }),
-  maskMap  => ({
-    match: maskMap && maskMap[0].value.match(/([01])/) ? /(\d)/  : /([0123])/,
-    replace: '$1',
-    space: '_',
-  }),
-  () => ({ match: /([012345])/, replace: ':$1', space: ':_' }),
-  () => ({ match: /(\d)/, replace: '$1', space: '_' }),
-];
-
-// '1234' => '12:34'
+# yarn
+yarn add string-mask-jedi
 ```
 
-### Config phone mask with repeat elements
-```javascript
-import { repeatMaskElement} from 'string-mask-jedi';
-
-const configMask = [
-  () => ({ match: /(\d)/, replace: '+$1' }),
-  () => ({ match: /(\d)/, replace: ' $1' }),
-  () => ({ match: /(\d)/, replace: '$1' }),
-  () => ({ match: /(\d)/, replace: '$1' }),
-  () => ({ match: /(\d)/, replace: ' $1' }),
-  ...repeatMaskElement(() => ({ match: /(\d)/, replace: '$1' }), 6),
-];
-
-// '95557866666' => '+9 555 7866666'
-```
-
-### Create config mask by string
-
-```javascript
-import { createConfigMask } from 'string-mask-jedi';  
-
-const configMasksPhoneCode = createConfigMask('+d ddd ddddddd');
-
-// configMasksPhoneCode => [
-// () => ({ match: /(\d)/, replace: '+$1', space: null }),
-// () => ({ match: /(\d)/, replace: ' $1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: ' $1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// () => ({ match: /(\d)/, replace: '$1', space: null }),
-// ]  
-
-const configMaksPhoneRu =  createConfigMask('7 (ddd) ddd-dd-dd', {
-  space: ' ',
-  translation: {
-    '7': { match: '^7|^\\+7', replace: '+7', space: '' },
-  },
-});
-
-// configMaksPhoneRu => [
-// () => ({ match: /(^7|^\+7)/, replace: '+7', space: '' }),
-// () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
-// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-// () => ({ match: /(\d)/, replace: ') $1', space: ') ' }),
-// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-// () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-// () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-// () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-// ]
-```
+## Usage
 
 ### Create mask
-```javascript
-import createMask from 'string-mask-jedi';
 
-const configMask = [...];
+```ts
+import { createMask } from "string-mask-jedi";
 
-const mask = creatorMask(configMask);
+const phoneMask = createMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
+
+console.log(phoneMask.run("9998887766").value);
+// +0 (999) 888-77-66
 ```
 
-### Сreate a mask with a handler
-#### `before`
-```javascript
-import createMask from 'string-mask-jedi';
+_[[createMask]](#createMask)_
 
-const configMask = [...];
+### React hook
 
-const mask = creatorMask(configMask, {
-  before: ({ value, cursor }) => ({
-    value: value.replace(/\D/g, ''),
-    cursor,
-  }),
-});
+```tsx
+import * as React from "react";
+import { createMask } from "string-mask-jedi";
+import { useMask } from "string-mask-jedi/react";
+
+const phoneMask = createMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
+
+const App: React.FC = () => {
+  const { value, onChange, ref } = useMask(phoneMask);
+
+  return <input value={value} onChange={onChange} ref={ref} />;
+};
 ```
 
-### Create combine mask
-```javascript
-import createMask, { combine } from 'string-mask-jedi';
+_[[createMask]](#createMask)_
+_[[useMask]](#useMask)_
 
-const configMaskPhone1 = [...];
-const configMaskPhone2 = [...];
+## API
 
-// The order of the masks by priority
-const mask = combine(
-  creatorMask(configMaskPhone1),
-  creatorMask(configMaskPhone2),
-);
+### `createMask`
+
+```ts
+/**
+ * @param stringMask - mask format
+ * @param translations - object with letters witch need translating
+ * @param options - object with added options for mask
+ */
+type CreateMask = (
+  stringMask: string,
+  translations?: Translations,
+  options?: Partial<Omit<Config, "tokens">>,
+) => Mask;
 ```
 
-### Use mask phone 
-#### `Create mask`
-```javascript
-import createMask from 'string-mask-jedi';
+_[[Translations]](#translation)_
+_[[Config]](#config)_
+_[[Mask]](#mask)_
 
-const configMask = [
-  () => ({ match: /(^7|\+7)/, replace: '+7' }),
-  () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: ') $1', space: ') ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-];
+### `Token`
 
-const mask = creatorMask(configMask);
-```
-####  `Add`
-```javascript
-mask({ value: '7', cursor: 1 });
-// => { value: '+7', cursor: 2, space: ' ( ) - - ', isMatched: true }
+Object witch cached value letter when process value after mask running.
 
-mask({ value: '+79', cursor: 3 });
-// => { value: '+7 (9', cursor: 5, space: ' ) - - ', isMatched: true }
-
-mask({ value: '+7 (99', cursor: 6 });
-// => { value: '+7 (99', cursor: 6, space: ' ) - - ', isMatched: true }
-
-mask({ value: '+7 (999', cursor: 7 });
-// => { value: '+7 (999', cursor: 7, space: ') - - ', isMatched: true }
-
-mask({ value: '+7 (9998', cursor: 8 })
-// => { value: '+7 (999) 8', cursor: 10, space: ' - - ', isMatched: true }
-
-mask({ value: '+7 (97799) 8', cursor: 7 })
-// => { value: '+7 (977) 998', cursor: 7, space: '- - ', isMatched: true }
-
-mask({ value: '+7 (955577) 998', cursor: 8 })
-// => { value: '+7 (955) 577-99-8', cursor: 10, space: ' ', isMatched: true }
-
-mask({ value: '+7 (000000955) 577-99-8', cursor: 10 })
-// => { value: '+7 (000) 000-95-55', cursor: 12, space: '', isMatched: true }
-
-mask({ value: '+7 (1111111111000) 000-95-55', cursor: 14 })
-// => { value: '+7 (111) 111-11-11', cursor: 18, space: '', isMatched: true }
-```
-####  `Remove`
-```javascript
-mask({ value: '79998887766', cursor: 11 })
-// => { value: '+7 (999) 888-77-66', cursor: 18, space: '', isMatched: true }
-
-mask({ value: '+7 (999) 888-77-6', cursor: 17 })
-// => { value: '+7 (999) 888-77-6', cursor: 17, space: ' ', isMatched: true }
-
-mask({ value: '+7 (999) 88-77-6', cursor: 11 })
-// => { value: '+7 (999) 887-76', cursor: 11, space: '- ', isMatched: true }
-
-mask({ value: '+7 (98-77-6', cursor: 5 })
-// => { value: '+7 (987) 76', cursor: 5, space: ' - - ', isMatched: true }
-
-mask({ value: '+787) 76', cursor: 2 })
-// => { value: '+7 (877) 6', cursor: 2, space: ' - - ', isMatched: true }
-
-mask({ value: '+ (877) 6', cursor: 1 })
-// => { value: '', cursor: 0, space: ' ( ) - - ', isMatched: false }
-
-mask({ value: '799988877', cursor: 9 })
-// => { value: '+7 (999) 888-77', cursor: 15, space: '- ', isMatched: true }
-
-mask({ value: '+7 (997', cursor: 6 })
-// => { value: '+7 (997', cursor: 6, space: ') - - ', isMatched: true }
-
-mask({ value: '+7 (9998887766', cursor: 14 })
-// => { value: '+7 (999) 888-77-66', cursor: 18, space: '', isMatched: true }
-
-mask({ value: '+7 (999) 888-77-6', cursor: 17 })
-// => { value: '+7 (999) 888-77-6', cursor: 17, space: ' ', isMatched: true }
-
-mask({ value: '+7 (999) 888-77-', cursor: 16 })
-// => { value: '+7 (999) 888-77', cursor: 15, space: '- ', isMatched: true }
-
-mask({ value: '+7 (999) 888-', cursor: 13 })
-// => { value: '+7 (999) 888', cursor: 12, space: '- - ', isMatched: true }
-
-mask({ value: '+7 (999)', cursor: 8 })
-// => { value: '+7 (999', cursor: 7, space: ') - - ', isMatched: true }
-```
-#### `Change`
-```javascript
-mask({ value: '79998887766', cursor: 11 })
-// => { value: '+7 (999) 888-77-66', cursor: 18, space: '', isMatched: true }
-
-mask({ value: '+7 (999) 888-77-656', cursor: 18 })
-// => { value: '+7 (999) 888-77-65', cursor: 18, space: '', isMatched: true }
-
-mask({ value: '+7 (999) 888-77-4465', cursor: 18 })
-// => { value: '+7 (999) 888-77-44', cursor: 18, space: '', isMatched: true }
-
-mask({ value: '+7 (999) 888-733337-44', cursor: 18 })
-// => { value: '+7 (999) 888-73-33', cursor: 18, space: '', isMatched: true }
-
-mask({ value: '+7 (999) 822-73-33', cursor: 12 })
-// => { value: '+7 (999) 822-73-33', cursor: 12, space: '', isMatched: true }
-
-mask({ value: '+7 (911122-73-33', cursor: 8 })
-// => { value: '+7 (911) 122-73-33', cursor: 10, space: '', isMatched: true }
-```
-
-### Use mask combine phone
-#### `Create mask`
-```javascript
-import createMask, { combine, repeatMaskElement } from 'string-mask-jedi';
-
-const configMaskPhone1 = [
-  () => ({ match: /(^7|\+7)/, replace: '+7' }),
-  () => ({ match: /(\d)/, replace: ' ($1', space: ' ( ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: ') $1', space: ') ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-  () => ({ match: /(\d)/, replace: '-$1', space: '- ' }),
-  () => ({ match: /(\d)/, replace: '$1', space: ' ' }),
-];
-
-const configMaskPhone2 = [
-  () => ({ match: /(\d)/, replace: '+$1' }),
-  () => ({ match: /(\d)/, replace: ' $1' }),
-  () => ({ match: /(\d)/, replace: '$1' }),
-  () => ({ match: /(\d)/, replace: '$1' }),
-  () => ({ match: /(\d)/, replace: ' $1' }),
-  ...repeatMaskElement(() => ({ match: /(\d)/, replace: '$1' }), 6),
-];
-
-const mask = combine(
-  creatorMask(configMaskPhone1),
-  creatorMask(configMaskPhone2, {
-    before: ({ value, cursor }) => ({
-      value: value.replace(/\D/g, ''),
-      cursor,
-    }),
-  }),
-);
-```
-####  `Add`
-```javascript
-mask({ value: '7', cursor: 1 })
-// => { value: '+7', cursor: 2, space: ' ( ) - - ', isMatched: true }
-
-mask({ value: '+', cursor: 1 })
-// => { value: '', cursor: 0, space: '', isMatched: false }
-
-mask({ value: '9888777', cursor: 7 })
-// => { value: '+9 888 777', cursor: 10, space: '', isMatched: true }
-
-// ? There may be a bug with the position of the cursor (rare case)
-mask({ value: '+79 888 777', cursor: 2 })
-// => { value: '+7 (988) 877-7', cursor: 5, space: ' - ', isMatched: true }
-```
-####  `Remove`
-```javascript
-mask({ value: '+7 (988) 877-7', cursor: 14 })
-// => { value: '+7 (988) 877-7', cursor: 14, space: ' - ', isMatched: true }
-
-mask({ value: '+ (988) 877-7', cursor: 1 })
-// => { value: '+9 888 777', cursor: 2, space: '', isMatched: true }
-
-mask({ value: '+9 8 777', cursor: 4 })
-// => { value: '+9 877 7', cursor: 4, space: '', isMatched: true }
-
-mask({ value: '+', cursor: 1 })
-// => { value: '', cursor: 0, space: '', isMatched: false }
-```
-
-### Use mask phone in React.Component
-```javascript
-import React, { Component } from  'react';
-import createMask, { masks, combine } from  'string-mask-jedi';
-
-const mask = combine(
-  createMask(...masks.phone.ru),
-  createMask(...masks.phone.code),
-);
-
-class MaskTextField extends Component {
-  focus =  false
-
-  state = {
-    value: '',
-    cursor: 0,
-  }
-
-  componentDidUpdate() {
-    if (this.focus) {
-      const { cursor } = this.state;
-
-      this.input.selectionStart = cursor;
-      this.input.selectionEnd = cursor;
-    }
-  }
-
-  onChange = (e) => {
-    const {
-      isMatched,
-      value,
-      space,
-      cursor,
-    } = mask({
-      value: e.target.value,
-      cursor: this.input.selectionStart,
-    });
-
-    this.setState({
-      value: isMatched ? `${value}${space}` : value,
-      cursor: isMatched ? cursor : this.input.selectionStart,
-    });
-  }
-
-  refInput = input => this.input = input
-
-  onFocus = () => this.focus = true
-
-  onBlur = () => this.focus = false
-
-  render = () => (
-    <input
-      {...this.props}
-      ref={this.refInput}
-      value={this.state.value}
-      onChange={this.onChange}
-      onFocus={this.onFocus}
-      onBlur={this.onBlur}
-    />
-  )
+```ts
+interface Token {
+  value: string;
+  additional: boolean;
 }
+```
 
-export default MaskTextField;
+### `State`
+
+Object current state mask in processing value after mask running.
+
+```ts
+interface State {
+  remainder: string;
+  tokens: Token[];
+  cursor: number;
+}
+```
+
+_[[Token]](#token)_
+
+### `GetMatch`
+
+Method fot get `RegExp` for each token.
+
+```ts
+type GetMatch = (state: State, index: number) => RegExp;
+```
+
+### `Mask`
+
+Restult `createMask`.
+
+```ts
+interface Mask {
+  run: MaskRun;
+  config: Config;
+}
+```
+
+_[[MaskRun]](#maskrun)_
+_[[Config]](#config)_
+
+### `MaskResult`
+
+Result run mask.
+
+```ts
+interface MaskResult {
+  value: string;
+  cursor: number;
+}
+```
+
+### `TokenConfig`
+
+Token config for each letter in created mask.
+
+```ts
+interface TokenConfig {
+  getMatch: GetMatch;
+  defaultValue: string;
+  additional: boolean;
+}
+```
+
+_[[GetMatch]](#getmatch)_
+
+### `Config`
+
+Config for create mask.
+
+> Please note. `createMask` automatically created config by `stringMask`, `translations` and `options`.
+
+```ts
+interface Config {
+  tokens: TokenConfig[];
+  converters: Converter[];
+}
+```
+
+_[[TokenConfig]](#tokenconfig)_
+_[[Converter]](#converter)_
+
+### `Converter`
+
+Method for converting result after
+
+```ts
+type Converter = (tokens: Token[], configTokens: TokenConfig[]) => void;
+```
+
+_[[Token]](#token)_
+_[[TokenConfig]](#tokenconfig)_
+
+---
+
+### `Translation`
+
+```ts
+type Translation = string | RegExp | GetMatch | TokenConfig | Mask;
+```
+
+_[[GetMatch]](#getmatch)_
+_[[TokenConfig]](#tokenconfig)_
+
+### `Translations`
+
+```ts
+interface Translations {
+  [key: string]: Translation | Translation[];
+}
+```
+
+_[[Translation]](#translation)_
+
+### `MaskRun`
+
+```ts
+type MaskRun = (value: string, cursor?: number) => MaskResult;
+```
+
+_[[MaskResult]](#maskresult)_
+
+## API for React
+
+### `useMask`
+
+React hook for use mask.
+
+```ts
+type useMask = <T = HTMLInputElement>(mask: Mask) => UseStringMaskResult<T>;
+```
+
+_[[Mask]](#mask)_
+_[[UseStringMaskResult]](#UseStringMaskResult)_
+
+### `UseStringMaskResult`
+
+Result react hook `useMask`.
+
+```ts
+interface UseStringMaskResult<T = any> {
+  value: string;
+  onChange: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => void;
+  ref: React.RefObject<T>;
+}
+```
+
+## Examples
+
+See storybook with examples code.
+
+- [Date](https://evgenyifedotov.github.io/string-mask-jedi/?path=/story/date--init)
+- [Time](https://evgenyifedotov.github.io/string-mask-jedi/?path=/story/time--init)
+- [Phone](https://evgenyifedotov.github.io/string-mask-jedi/?path=/story/phone--init)
+
+## Tests
+
+```sh
+# npm
+npm install
+npm run test
+
+# yarn
+yarn install
+yarn test
 ```
