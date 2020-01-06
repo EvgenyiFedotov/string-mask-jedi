@@ -1,6 +1,6 @@
 {
   "name": "string-mask-jedi",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Create string mask",
   "main": "./dist",
   "typings": "./typings",
