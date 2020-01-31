@@ -54,6 +54,35 @@ const App: React.FC = () => {
 _[[createMask]](#createMask)_
 _[[useMask]](#useMask)_
 
+### React hook with use effector
+
+```tsx
+import * as React from "react";
+import { createMask } from "string-mask-jedi";
+import { useMask } from "string-mask-jedi/react";
+import { createEvent, restore } from "effector";
+import { useStore } from "effector-react";
+
+const phoneMask = createMask("+0 (ddd) ddd-dd-dd", { d: /\d/ });
+
+const updateValue = createEvent<MaskResult>();
+const $value = restore(updateValue, { value: "", cursor: 0 });
+
+const App: React.FC = () => {
+  const rawValue = useStore($value);
+  const { value, onChange, ref } = useMask(phoneMask, () => [
+    rawValue,
+    updateValue,
+  ]);
+
+  return <input value={value} onChange={onChange} ref={ref} />;
+};
+```
+
+_[[createMask]](#createMask)_
+_[[useMask]](#useMask)_
+_[[UseStateHandler]](#UseStateHandler)_
+
 ## API
 
 ### `createMask`
@@ -210,11 +239,25 @@ _[[MaskResult]](#maskresult)_
 React hook for use mask.
 
 ```ts
-type useMask = <T = HTMLInputElement>(mask: Mask) => UseStringMaskResult<T>;
+type useMask = <T = HTMLInputElement>(
+  mask: Mask,
+  useState: UseStateHandler = React.useState,
+) => UseStringMaskResult<T>;
 ```
 
 _[[Mask]](#mask)_
+_[[UseStateHandler]](#UseStateHandler)_
 _[[UseStringMaskResult]](#UseStringMaskResult)_
+
+### `UseStateHandler`
+
+Сtate management handler
+
+```ts
+type UseStateHandler = (
+  initialState: MaskResult,
+) => [MaskResult, (state: MaskResult) => any];
+```
 
 ### `UseStringMaskResult`
 
