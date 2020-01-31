@@ -17,12 +17,17 @@ interface UseStringMaskResult<T = HTMLInputElement | HTMLTextAreaElement> {
   ref: React.RefObject<T>;
 }
 
+export type UseStateHandler = (
+  initialState: MaskResult,
+) => [MaskResult, (state: MaskResult) => any];
+
 export const useMask = <T = HTMLInputElement>(
   mask: Mask,
+  useState: UseStateHandler = React.useState,
 ): UseStringMaskResult<T> => {
   const ref = React.useRef<T>(null);
 
-  const [maskResult, setMaskResult] = React.useState<MaskResult>({
+  const [maskResult, setMaskResult] = useState({
     value: "",
     cursor: 0,
   });

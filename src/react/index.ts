@@ -1,1 +1,1 @@
-export { useMask } from "./use-mask";
+export { useMask, UseStateHandler } from "./use-mask";
