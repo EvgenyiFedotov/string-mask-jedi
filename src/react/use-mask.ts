@@ -32,7 +32,15 @@ export const useMask = <T = HTMLInputElement>(
     cursor: 0,
   });
 
-  const value = React.useMemo(() => maskResult.value, [maskResult]);
+  const value = React.useMemo(() => {
+    const nextValue = mask.run(maskResult.value, maskResult.cursor);
+
+    if (maskResult.value !== nextValue.value) {
+      setMaskResult(nextValue);
+    }
+
+    return nextValue.value;
+  }, [maskResult]);
 
   const onChange = React.useCallback<OnChange>(
     (event) => {
